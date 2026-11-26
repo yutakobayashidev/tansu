@@ -1,0 +1,15 @@
+{
+  "cards": [
+    {
+      "fn": "Jane Doe",
+      "n": "Doe;Jane;;;",
+      "org": "Example Widgets Inc.",
+      "title": "Head of Partnerships",
+      "tel": ["+1 555-0100"],
+      "email": ["jane.doe@example.com"],
+      "adr": "100 Example Street, Suite 200, Springfield, ZZ 00000, USA",
+      "url": "https://www.example.com/",
+      "note": null
+    }
+  ]
+}

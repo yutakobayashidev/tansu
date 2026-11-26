@@ -6,6 +6,8 @@ plugins {
   alias(libs.plugins.androidx.room)
 }
 
+val updateGoldens = providers.gradleProperty("updateGoldens").isPresent
+
 android {
   namespace = "dev.yutakobayashi.tansu"
   compileSdk = 36
@@ -37,6 +39,18 @@ android {
 
   testOptions {
     unitTests.isIncludeAndroidResources = true
+    unitTests.all { test ->
+      // Golden と同じ値を testing/Golden.kt が読む。更新は `-PupdateGoldens` を付けて実行する。
+      val goldenDir = layout.projectDirectory.dir("src/test/golden")
+      test.inputs.dir(goldenDir).withPropertyName("goldens").withPathSensitivity(PathSensitivity.RELATIVE)
+      test.inputs.property("updateGoldens", updateGoldens)
+      test.systemProperty("tansu.golden.dir", goldenDir.asFile.absolutePath)
+      test.systemProperty(
+        "tansu.golden.actualDir",
+        layout.buildDirectory.dir("golden-actual/${test.name}").get().asFile.absolutePath,
+      )
+      test.systemProperty("tansu.golden.update", updateGoldens.toString())
+    }
   }
 
   packaging {
@@ -74,6 +88,9 @@ dependencies {
   ksp(libs.androidx.room.compiler)
   implementation(libs.kotlinx.serialization.json)
 
+  // Network
+  implementation(libs.okhttp)
+
   // Compose
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling.preview)
@@ -89,6 +106,7 @@ dependencies {
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.robolectric)
   testImplementation(libs.androidx.test.core)
+  testImplementation(libs.okhttp.mockwebserver)
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)

@@ -35,6 +35,23 @@ Build and check:
 android-dev gradle assembleDebug testDebugUnitTest lintDebug
 ```
 
+JVM unit tests share helpers in `app/src/test/kotlin/.../testing/`:
+
+- `AnalysisFixture`: six fixed analysis responses in
+  `app/src/test/resources/fixtures/analysis/` (Japanese, English, three people,
+  no card, missing `FN` / malformed `EMAIL`, commas, quotes and line breaks).
+  All values are fictional.
+- `FakeAnalysisClient`: returns queued results without HTTP and counts calls.
+- `MockAnalysisServer`: a `MockWebServer` JUnit rule that serves fixtures as
+  Chat Completions responses, HTTP errors, or SSE streams (`Sse`).
+- `Golden`: byte-for-byte comparison against `app/src/test/golden/`. On a
+  mismatch the actual output is written to `app/build/golden-actual/`.
+  Review the diff, then accept it with:
+
+  ```bash
+  android-dev gradle testDebugUnitTest -PupdateGoldens
+  ```
+
 The pinned SDK is API 36 with Build Tools 36.0.0. The app uses
 `compileSdk = 36`, `minSdk = 26`, and `jvmToolchain(21)`.
 

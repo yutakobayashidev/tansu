@@ -12,7 +12,7 @@ local.properties
 .externalNativeBuild
 .cxx
 .android-dev/
-analysis/
+/analysis/
 
 # IDE
 *.iml

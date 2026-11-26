@@ -1,0 +1,37 @@
+{
+  "cards": [
+    {
+      "fn": "山田 太郎",
+      "n": "山田;太郎;;;",
+      "org": "株式会社サンプル商事",
+      "title": "営業部 部長",
+      "tel": ["03-0000-0000"],
+      "email": ["taro.yamada@example.co.jp"],
+      "adr": null,
+      "url": null,
+      "note": null
+    },
+    {
+      "fn": "Jane Doe",
+      "n": "Doe;Jane;;;",
+      "org": "Example Widgets Inc.",
+      "title": null,
+      "tel": [],
+      "email": ["jane.doe@example.com"],
+      "adr": null,
+      "url": "https://www.example.com/",
+      "note": null
+    },
+    {
+      "fn": "佐藤 花子",
+      "n": null,
+      "org": "架空大学",
+      "title": "准教授",
+      "tel": ["06-0000-0000"],
+      "email": [],
+      "adr": null,
+      "url": null,
+      "note": null
+    }
+  ]
+}

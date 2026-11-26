@@ -1,0 +1,26 @@
+{
+  "cards": [
+    {
+      "fn": "",
+      "n": null,
+      "org": "株式会社サンプル商事",
+      "title": "",
+      "tel": ["03-0000-0000"],
+      "email": [],
+      "adr": null,
+      "url": null,
+      "note": null
+    },
+    {
+      "fn": "鈴木 一郎",
+      "n": "鈴木;一郎;;;",
+      "org": "株式会社サンプル商事",
+      "title": null,
+      "tel": [],
+      "email": ["ichiro.suzuki@@example"],
+      "adr": null,
+      "url": null,
+      "note": " "
+    }
+  ]
+}
