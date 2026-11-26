@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  flake-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Nix
+        uses: nixbuild/nix-quick-install-action@v35
+        with:
+          github_access_token: ${{ github.token }}
+          nix_conf: |
+            access-tokens = github.com=${{ github.token }}
+      - run: nix flake check
+
+  unit-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Nix
+        uses: nixbuild/nix-quick-install-action@v35
+        with:
+          github_access_token: ${{ github.token }}
+          nix_conf: |
+            access-tokens = github.com=${{ github.token }}
+      - run: nix develop --command android-dev gradle testDebugUnitTest lintDebug
+
+  gha-lint:
+    permissions:
+      contents: read
+    uses: zunoser/reusable-workflows/.github/workflows/gha-lint.yml@9fca6ff223f82d81b1d003fa5cfac0794fad78a7 # v1.3.0
+
+  # Add every new job to `needs`.
+  ci-gate:
+    if: always()
+    needs: [flake-check, unit-test, gha-lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
