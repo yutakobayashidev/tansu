@@ -9,6 +9,9 @@ import dev.yutakobayashi.tansu.data.settings.AnalysisCredentials
 import dev.yutakobayashi.tansu.domain.AnalysisStatus
 import dev.yutakobayashi.tansu.domain.Candidate
 import dev.yutakobayashi.tansu.domain.ContentHash
+import dev.yutakobayashi.tansu.testing.AnalysisFixture
+import dev.yutakobayashi.tansu.testing.FakeAnalysisClient
+import dev.yutakobayashi.tansu.testing.chatCompletionBody
 import java.io.ByteArrayInputStream
 import java.io.File
 import kotlinx.coroutines.CompletableDeferred
@@ -91,7 +94,7 @@ class AnalysisRunnerTest {
     val hash = importImage()
     val runner = runner()
     server.enqueue(MockResponse().setResponseCode(429))
-    server.enqueue(MockResponse().setBody(completion(CARD_JSON)))
+    server.enqueue(MockResponse().setBody(chatCompletionBody(CARD_JSON)))
 
     assertEquals(AnalysisRunResult.Failed(AnalysisFailure.RateLimited), runner.run(hash))
     assertEquals(1, server.requestCount)
@@ -107,7 +110,7 @@ class AnalysisRunnerTest {
   @Test
   fun sendsTheStoredImageBytesUnmodified() = runTest {
     val hash = importImage()
-    server.enqueue(MockResponse().setBody(completion("""{"cards":[]}""")))
+    server.enqueue(MockResponse().setBody(chatCompletionBody("""{"cards":[]}""")))
     var sent: AnalysisImage? = null
     val recording = AnalysisClient { credentials, image ->
       sent = image
@@ -119,6 +122,18 @@ class AnalysisRunnerTest {
     assertEquals(AnalysisRunResult.Read(emptyList()), result)
     assertArrayEquals(IMAGE, sent!!.bytes)
     assertEquals("image/png", sent?.mimeType)
+  }
+
+  @Test
+  fun threePeopleBecomeThreeCandidatesFromOneCall() = runTest {
+    val hash = importImage()
+    val client = FakeAnalysisClient().enqueue(AnalysisFixture.ThreePeople)
+
+    val result = runner(client).run(hash) as AnalysisRunResult.Read
+
+    assertEquals(1, client.callCount)
+    assertEquals(3, result.candidates.size)
+    assertEquals(AnalysisStatus.AwaitingReview(result.candidates), repository.analysis(hash)!!.status)
   }
 
   @Test
@@ -163,10 +178,5 @@ class AnalysisRunnerTest {
     const val CARD_JSON =
       """{"cards":[{"fn":"山田 太郎","n":null,"org":null,"title":null,"tel":[],"email":[],""" +
         """"adr":null,"url":null,"note":" "}]}"""
-
-    fun completion(content: String): String {
-      val escaped = kotlinx.serialization.json.Json.encodeToString(kotlinx.serialization.json.JsonPrimitive(content))
-      return """{"choices":[{"message":{"content":$escaped},"finish_reason":"stop"}]}"""
-    }
   }
 }

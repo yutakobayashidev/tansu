@@ -1,0 +1,15 @@
+{
+  "cards": [
+    {
+      "fn": "高橋 次郎",
+      "n": "高橋;次郎;;;",
+      "org": "合同会社 \"テスト, 研究所\"\n第二開発部",
+      "title": "主任研究員, \"R&D\"",
+      "tel": ["045-000-0000"],
+      "email": ["jiro.takahashi@example.org"],
+      "adr": null,
+      "url": null,
+      "note": "1行目\r\n2行目"
+    }
+  ]
+}
