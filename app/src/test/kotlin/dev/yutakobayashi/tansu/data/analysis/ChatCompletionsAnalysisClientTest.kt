@@ -1,6 +1,8 @@
 package dev.yutakobayashi.tansu.data.analysis
 
 import dev.yutakobayashi.tansu.data.settings.AnalysisCredentials
+import dev.yutakobayashi.tansu.testing.Golden
+import dev.yutakobayashi.tansu.testing.chatCompletionBody
 import java.util.Base64
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -38,7 +40,7 @@ class ChatCompletionsAnalysisClientTest {
 
   @Test
   fun analyze_sendsOneChatCompletionsRequestWithTheImageBytes() = runTest {
-    server.enqueue(MockResponse().setBody(completion(CARDS_JSON)))
+    server.enqueue(MockResponse().setBody(chatCompletionBody(CARDS_JSON)))
 
     val result = analyze()
 
@@ -59,8 +61,16 @@ class ChatCompletionsAnalysisClientTest {
   }
 
   @Test
+  fun requestBody_matchesTheGolden() {
+    // 指示文・スキーマ・画像の埋め込み方を変えたら、ゴールデンの差分で確認する。
+    val body = ChatCompletionsProtocol.requestBody("model-a", AnalysisImage(IMAGE, "image/png"))
+
+    Golden.assertMatches("analysis/chat-completions-request.json", prettyJson.encodeToString(Json.parseToJsonElement(body)) + "\n")
+  }
+
+  @Test
   fun analyze_treatsEmptyCardsAsARead() = runTest {
-    server.enqueue(MockResponse().setBody(completion("""{"cards":[]}""")))
+    server.enqueue(MockResponse().setBody(chatCompletionBody("""{"cards":[]}""")))
     assertEquals(AnalysisClientResult.Read(emptyList()), analyze())
   }
 
@@ -78,7 +88,7 @@ class ChatCompletionsAnalysisClientTest {
     for ((status, failure) in cases) {
       MockWebServer().use { other ->
         other.enqueue(MockResponse().setResponseCode(status).setHeader("Location", other.url("/elsewhere")))
-        other.enqueue(MockResponse().setBody(completion(CARDS_JSON)))
+        other.enqueue(MockResponse().setBody(chatCompletionBody(CARDS_JSON)))
 
         val result = client.analyze(credentials(other), AnalysisImage(IMAGE, "image/png"))
 
@@ -91,7 +101,7 @@ class ChatCompletionsAnalysisClientTest {
   @Test
   fun analyze_doesNotResendOn503WithRetryAfterZero() = runTest {
     server.enqueue(MockResponse().setResponseCode(503).setHeader("Retry-After", "0"))
-    server.enqueue(MockResponse().setBody(completion(CARDS_JSON)))
+    server.enqueue(MockResponse().setBody(chatCompletionBody(CARDS_JSON)))
 
     assertEquals(AnalysisClientResult.Failed(AnalysisFailure.InvalidResponse), analyze())
     assertEquals(1, server.requestCount)
@@ -103,9 +113,9 @@ class ChatCompletionsAnalysisClientTest {
       listOf(
         "not json",
         """{"choices":[]}""",
-        completion("not json"),
-        completion("""{"cards":[{"fn":"A"}]}"""),
-        completion("""{"cards":[], "extra": 1}"""),
+        chatCompletionBody("not json"),
+        chatCompletionBody("""{"cards":[{"fn":"A"}]}"""),
+        chatCompletionBody("""{"cards":[], "extra": 1}"""),
         """{"choices":[{"message":{"content":null,"refusal":"I can't"},"finish_reason":"stop"}]}""",
         """{"choices":[{"message":{"content":"{\"cards\":[]}"},"finish_reason":"length"}]}""",
       )
@@ -135,6 +145,8 @@ class ChatCompletionsAnalysisClientTest {
   }
 
   private companion object {
+    val prettyJson = Json { prettyPrint = true }
+
     val IMAGE = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0, 1, 2, 3)
 
     const val CARDS_JSON =
@@ -153,10 +165,5 @@ class ChatCompletionsAnalysisClientTest {
         url = null,
         note = null,
       )
-
-    fun completion(content: String): String {
-      val escaped = Json.encodeToString(kotlinx.serialization.json.JsonPrimitive(content))
-      return """{"id":"x","choices":[{"index":0,"message":{"role":"assistant","content":$escaped},"finish_reason":"stop"}]}"""
-    }
   }
 }

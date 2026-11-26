@@ -1,0 +1,110 @@
+{
+    "model": "model-a",
+    "messages": [
+        {
+            "role": "system",
+            "content": "You read business cards in a photo. Return one element in `cards` for every business card visible in the image, including cards that are partly visible. Copy text exactly as printed: do not translate, guess, complete or normalize values. Use null for a property that is not printed and an empty array when there is no TEL or EMAIL. If no business card is visible, return an empty `cards` array. Property names follow vCard 4.0."
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "data:image/png;base64,iVBORwABAgM="
+                    }
+                }
+            ]
+        }
+    ],
+    "response_format": {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "business_cards",
+            "strict": true,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "cards": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "fn": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "n": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "org": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "title": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "tel": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "email": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "adr": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "url": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "note": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "fn",
+                                "n",
+                                "org",
+                                "title",
+                                "tel",
+                                "email",
+                                "adr",
+                                "url",
+                                "note"
+                            ],
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                "required": [
+                    "cards"
+                ],
+                "additionalProperties": false
+            }
+        }
+    }
+}
