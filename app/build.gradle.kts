@@ -74,6 +74,9 @@ dependencies {
   ksp(libs.androidx.room.compiler)
   implementation(libs.kotlinx.serialization.json)
 
+  // Network
+  implementation(libs.okhttp)
+
   // Compose
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling.preview)
@@ -89,6 +92,7 @@ dependencies {
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.robolectric)
   testImplementation(libs.androidx.test.core)
+  testImplementation(libs.okhttp.mockwebserver)
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)
