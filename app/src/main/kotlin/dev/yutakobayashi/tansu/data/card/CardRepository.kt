@@ -10,6 +10,7 @@ import dev.yutakobayashi.tansu.domain.Analysis
 import dev.yutakobayashi.tansu.domain.Candidate
 import dev.yutakobayashi.tansu.domain.Card
 import dev.yutakobayashi.tansu.domain.ContentHash
+import dev.yutakobayashi.tansu.domain.ImageProgress
 import dev.yutakobayashi.tansu.domain.SourceImage
 import java.io.File
 import java.io.InputStream
@@ -50,6 +51,20 @@ class CardRepository(
   suspend fun analysis(sourceImage: ContentHash): Analysis? = withContext(ioDispatcher) {
     database.withTransaction { loadAnalysisOrNull(sourceImage) }
   }
+
+  /**
+   * [sourceImages] それぞれの進み具合を返す。取り込んでいない名刺画像は [ImageProgress.Unprocessed]。
+   */
+  suspend fun progress(sourceImages: Collection<ContentHash>): Map<ContentHash, ImageProgress> =
+    withContext(ioDispatcher) {
+      val stored = sourceImages
+        .map { it.value }
+        .distinct()
+        .chunked(QUERY_CHUNK)
+        .flatMap { dao.analyses(it) }
+        .associate { it.sourceImage to it.status.toProgress() }
+      sourceImages.associateWith { stored[it.value] ?: ImageProgress.Unprocessed }
+    }
 
   suspend fun sourceImage(contentHash: ContentHash): SourceImage? = withContext(ioDispatcher) {
     dao.sourceImage(contentHash.value)?.toDomain()
@@ -130,6 +145,11 @@ class CardRepository(
   private suspend fun loadAnalysisOrNull(sourceImage: ContentHash): Analysis? {
     val entity = dao.analysis(sourceImage.value) ?: return null
     return entity.toDomain(dao.candidates(sourceImage.value))
+  }
+
+  private companion object {
+    /** SQLite のバインド変数の上限（既定 999）を超えないよう、IN 句を分ける件数。 */
+    const val QUERY_CHUNK = 500
   }
 }
 

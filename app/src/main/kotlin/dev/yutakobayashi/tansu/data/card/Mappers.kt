@@ -7,6 +7,7 @@ import dev.yutakobayashi.tansu.domain.Card
 import dev.yutakobayashi.tansu.domain.CardDetails
 import dev.yutakobayashi.tansu.domain.ContentHash
 import dev.yutakobayashi.tansu.domain.CopiedFileRef
+import dev.yutakobayashi.tansu.domain.ImageProgress
 import dev.yutakobayashi.tansu.domain.PropertyValue
 import dev.yutakobayashi.tansu.domain.SourceImage
 import dev.yutakobayashi.tansu.domain.Uid
@@ -17,18 +18,21 @@ internal fun SourceImage.toEntity() = SourceImageEntity(contentHash.value, copie
 internal fun SourceImageEntity.toDomain() =
   SourceImage(ContentHash(contentHash), CopiedFileRef(copiedFile))
 
-internal fun AnalysisEntity.toDomain(candidates: List<CandidateEntity>): Analysis {
-  val hash = ContentHash(sourceImage)
-  val status = when (status) {
+internal fun AnalysisEntity.toDomain(candidates: List<CandidateEntity>): Analysis =
+  Analysis(ContentHash(sourceImage), status.toDomain { candidates.map { it.toDomain() } })
+
+/** 候補は `確認待ち` のときだけ [candidates] で読む。 */
+private fun StoredAnalysisStatus.toDomain(candidates: () -> List<Candidate>): AnalysisStatus =
+  when (this) {
     StoredAnalysisStatus.NOT_ANALYZED -> AnalysisStatus.NotAnalyzed
     StoredAnalysisStatus.ANALYZING -> AnalysisStatus.Analyzing
-    StoredAnalysisStatus.AWAITING_REVIEW ->
-      AnalysisStatus.AwaitingReview(candidates.map { it.toDomain() })
+    StoredAnalysisStatus.AWAITING_REVIEW -> AnalysisStatus.AwaitingReview(candidates())
     StoredAnalysisStatus.COMPLETED -> AnalysisStatus.Completed
     StoredAnalysisStatus.FAILED -> AnalysisStatus.Failed
   }
-  return Analysis(hash, status)
-}
+
+/** 候補を読まずに進み具合だけを求める。 */
+internal fun StoredAnalysisStatus.toProgress(): ImageProgress = ImageProgress.of(toDomain { emptyList() })
 
 internal fun Candidate.toEntity(position: Int) = CandidateEntity(
   sourceImage = sourceImage.value,

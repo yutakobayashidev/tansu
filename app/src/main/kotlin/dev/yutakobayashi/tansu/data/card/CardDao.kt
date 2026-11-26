@@ -19,6 +19,10 @@ internal interface CardDao {
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   suspend fun insertAnalysis(entity: AnalysisEntity)
 
+  /** [sourceImages] のうち解析がある名刺画像について、その状態を返す。 */
+  @Query("SELECT * FROM analysis WHERE source_image IN (:sourceImages)")
+  suspend fun analyses(sourceImages: List<String>): List<AnalysisEntity>
+
   @Query("SELECT * FROM analysis WHERE source_image = :sourceImage")
   suspend fun analysis(sourceImage: String): AnalysisEntity?
 

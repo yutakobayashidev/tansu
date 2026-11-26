@@ -1,19 +1,31 @@
 package dev.yutakobayashi.tansu.data.card
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import dev.yutakobayashi.tansu.data.folder.FolderImageHashDao
+import dev.yutakobayashi.tansu.data.folder.FolderImageHashEntity
 
 @Database(
-  entities = [SourceImageEntity::class, AnalysisEntity::class, CandidateEntity::class, CardEntity::class],
-  version = 1,
+  entities = [
+    SourceImageEntity::class,
+    AnalysisEntity::class,
+    CandidateEntity::class,
+    CardEntity::class,
+    FolderImageHashEntity::class,
+  ],
+  version = 2,
+  autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 @TypeConverters(Converters::class)
 abstract class TansuDatabase : RoomDatabase() {
   internal abstract fun cardDao(): CardDao
+
+  internal abstract fun folderImageHashDao(): FolderImageHashDao
 
   companion object {
     const val NAME = "tansu.db"

@@ -1,0 +1,48 @@
+# yamllint disable rule:document-start
+# AC1: フォルダ指定後、画像が更新日時降順で並び、保存済みにバッジが付く。
+#
+# debug ビルドで、.maestro/setup-folder-grid.sh を実行してから流す。
+#   android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/folder-grid.yaml
+# 画像の更新日時は card-c > card-b > card-a。3 枚が 1 行に並ぶ画面幅を前提にする。フォルダ選択は DocumentsUI（英語ロケール）を操作する。
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- tapOn: フォルダを選ぶ
+- tapOn: Pictures
+- tapOn: tansu-e2e
+- tapOn: USE THIS FOLDER
+- tapOn: ALLOW
+- extendedWaitUntil:
+    visible: "card-a.jpg、未処理"
+    timeout: 10000
+# 更新日時の新しい順に、左から card-c、card-b、card-a。
+- assertVisible:
+    text: "card-b.jpg.*"
+    rightOf:
+      text: "card-c.jpg.*"
+- assertVisible:
+    text: "card-a.jpg.*"
+    rightOf:
+      text: "card-b.jpg.*"
+- assertVisible: "card-b.jpg、未処理"
+- assertVisible: "card-c.jpg、未処理"
+# 解析クライアントを通さずに状態を作る（debug ビルド専用の deep link）。
+- openLink: tansu-debug://seed?name=card-b.jpg&state=completed
+- openLink: tansu-debug://seed?name=card-c.jpg&state=awaiting
+- launchApp
+- extendedWaitUntil:
+    visible: "card-b.jpg、完了"
+    timeout: 10000
+- assertVisible: "card-c.jpg、確認待ち"
+- assertVisible: "card-a.jpg、未処理"
+# 再起動後も同じフォルダを読み、順序も変わらない。
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "card-b.jpg、完了"
+    timeout: 10000
+- assertVisible:
+    text: "card-b.jpg.*"
+    rightOf:
+      text: "card-c.jpg.*"

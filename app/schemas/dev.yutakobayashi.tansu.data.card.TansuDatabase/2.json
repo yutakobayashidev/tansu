@@ -1,0 +1,289 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "40381a0a8d3c4b41f61c98f7249cfeee",
+    "entities": [
+      {
+        "tableName": "source_image",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`content_hash` TEXT NOT NULL, `copied_file` TEXT NOT NULL, PRIMARY KEY(`content_hash`))",
+        "fields": [
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "copiedFile",
+            "columnName": "copied_file",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "content_hash"
+          ]
+        }
+      },
+      {
+        "tableName": "analysis",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`source_image` TEXT NOT NULL, `status` TEXT NOT NULL, PRIMARY KEY(`source_image`), FOREIGN KEY(`source_image`) REFERENCES `source_image`(`content_hash`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "sourceImage",
+            "columnName": "source_image",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "source_image"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "source_image",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "source_image"
+            ],
+            "referencedColumns": [
+              "content_hash"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "candidate",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`source_image` TEXT NOT NULL, `position` INTEGER NOT NULL, `fn` TEXT, `n` TEXT, `org` TEXT, `title` TEXT, `tel` TEXT NOT NULL, `email` TEXT NOT NULL, `adr` TEXT, `url` TEXT, `note` TEXT, PRIMARY KEY(`source_image`, `position`), FOREIGN KEY(`source_image`) REFERENCES `analysis`(`source_image`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "sourceImage",
+            "columnName": "source_image",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fn",
+            "columnName": "fn",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.n",
+            "columnName": "n",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.org",
+            "columnName": "org",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.tel",
+            "columnName": "tel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details.email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details.adr",
+            "columnName": "adr",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "source_image",
+            "position"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "analysis",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "source_image"
+            ],
+            "referencedColumns": [
+              "source_image"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "card",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `source_image` TEXT NOT NULL, `fn` TEXT NOT NULL, `n` TEXT, `org` TEXT, `title` TEXT, `tel` TEXT NOT NULL, `email` TEXT NOT NULL, `adr` TEXT, `url` TEXT, `note` TEXT, PRIMARY KEY(`uid`), FOREIGN KEY(`source_image`) REFERENCES `source_image`(`content_hash`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "fields": [
+          {
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceImage",
+            "columnName": "source_image",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fn",
+            "columnName": "fn",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details.n",
+            "columnName": "n",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.org",
+            "columnName": "org",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.tel",
+            "columnName": "tel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details.email",
+            "columnName": "email",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "details.adr",
+            "columnName": "adr",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.url",
+            "columnName": "url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "details.note",
+            "columnName": "note",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "uid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_card_source_image",
+            "unique": false,
+            "columnNames": [
+              "source_image"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_card_source_image` ON `${TABLE_NAME}` (`source_image`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "source_image",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "source_image"
+            ],
+            "referencedColumns": [
+              "content_hash"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "folder_image_hash",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`document_uri` TEXT NOT NULL, `last_modified` INTEGER, `size` INTEGER, `content_hash` TEXT NOT NULL, PRIMARY KEY(`document_uri`))",
+        "fields": [
+          {
+            "fieldPath": "documentUri",
+            "columnName": "document_uri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "last_modified",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "size",
+            "columnName": "size",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "contentHash",
+            "columnName": "content_hash",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "document_uri"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '40381a0a8d3c4b41f61c98f7249cfeee')"
+    ]
+  }
+}
