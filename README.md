@@ -61,6 +61,15 @@ Maestro flows:
      .maestro/smoke.yaml
    ```
 
+   The folder grid flow (AC1) needs fixture images and a debug build. The
+   setup script pushes fictional card images and enlarges the display so
+   three thumbnails fit in a row:
+
+   ```bash
+   .maestro/setup-folder-grid.sh emulator-5554
+   android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/folder-grid.yaml
+   ```
+
 Return `emulator` to `false` before committing unless a change genuinely needs
 an emulator in CI.
 

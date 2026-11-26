@@ -4,6 +4,19 @@
 
     <string name="home_analyze">解析</string>
 
+    <string name="folder_not_selected_title">フォルダを選んでください</string>
+    <string name="folder_not_selected_body">名刺画像のあるフォルダを選ぶと、画像を更新日時の新しい順に並べます。アプリが読むのは選んだフォルダだけです。</string>
+    <string name="folder_pick">フォルダを選ぶ</string>
+    <string name="folder_change">変更</string>
+    <string name="folder_empty">このフォルダには画像がありません</string>
+    <string name="folder_unavailable_title">フォルダを読めません</string>
+    <string name="folder_unavailable_body">フォルダが移動・削除されたか、読み取りの許可が取り消されました。フォルダを選び直してください。</string>
+    <string name="folder_repick">フォルダを選び直す</string>
+
+    <string name="progress_unprocessed">未処理</string>
+    <string name="progress_awaiting_review">確認待ち</string>
+    <string name="progress_completed">完了</string>
+
     <string name="settings_required_title">接続先の設定が必要です</string>
     <string name="settings_required_body">解析には、OpenAI 互換 API の base URL・モデル名・API キーが必要です。設定を保存すると解析できるようになります。</string>
     <string name="settings_required_action">設定を開く</string>
