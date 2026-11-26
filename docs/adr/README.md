@@ -15,7 +15,7 @@
 
 | ADR | Status | Decision |
 |---|---|---|
-| [0001](0001-dual-auth-byo-first-with-flagged-chatgpt-sign-in.md) | Accepted | Sign in with ChatGPT を主、BYO API キーを従とし、出荷は BYO 先行・SIWC は機能フラグで隔離する |
+| [0001](0001-dual-auth-byo-first-with-flagged-chatgpt-sign-in.md) | Accepted | 両対応。BYO を先行出荷し、SIWC は機能フラグで隔離 |
 | [0002](0002-select-image-folder-via-saf.md) | Accepted | 名刺画像フォルダは SAF で指定する |
-| [0003](0003-extract-all-cards-and-keep-original-images.md) | Accepted | 1画像から N 件の名刺を全件抽出し、画像は無加工で複製保持する |
-| [0004](0004-export-vcard4-and-csv-with-conditional-photo.md) | Accepted | 出力は vCard 4.0 + CSV とし、PHOTO は候補が1件のときだけ縮小版を埋め込む |
+| [0003](0003-extract-all-cards-and-keep-original-images.md) | Accepted | 1画像を解析して N 件の候補を全件扱い、画像は無加工で複製保持する |
+| [0004](0004-export-vcard4-and-csv-with-conditional-photo.md) | Accepted | 出力は vCard 4.0 + CSV とし、PHOTO は候補が1件のときだけ縮小版を埋め込む。CSV は `photo_sha256` で画像を参照する |
