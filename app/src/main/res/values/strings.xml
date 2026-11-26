@@ -1,3 +1,35 @@
 <resources>
     <string name="app_name">tansu</string>
+    <string name="action_back">戻る</string>
+
+    <string name="home_analyze">解析</string>
+
+    <string name="settings_required_title">接続先の設定が必要です</string>
+    <string name="settings_required_body">解析には、OpenAI 互換 API の base URL・モデル名・API キーが必要です。設定を保存すると解析できるようになります。</string>
+    <string name="settings_required_action">設定を開く</string>
+
+    <string name="settings_title">設定</string>
+    <string name="settings_description">解析に使う OpenAI 互換 API の接続先を設定します。3 項目すべてが必須です。</string>
+    <string name="settings_base_url_label">base URL</string>
+    <string name="settings_base_url_placeholder">https://api.example.com/v1</string>
+    <string name="settings_base_url_help">https で始まる URL。この後ろに /models などを付けて呼び出します</string>
+    <string name="settings_model_label">モデル名</string>
+    <string name="settings_model_help">提供元が定めるモデル ID をそのまま入力します</string>
+    <string name="settings_api_key_label">API キー</string>
+    <string name="settings_api_key_help">Android Keystore の鍵で暗号化して端末内に保存します</string>
+    <string name="settings_api_key_saved_help">保存済みです。変更する場合だけ入力します</string>
+    <string name="settings_save">保存</string>
+    <string name="settings_saved">保存しました</string>
+    <string name="settings_error_base_url">https で始まる URL を入力してください。クエリや # は含められません</string>
+    <string name="settings_error_model">モデル名を入力してください</string>
+    <string name="settings_error_api_key">API キーを入力してください</string>
+
+    <string name="settings_check_title">接続確認</string>
+    <string name="settings_check_description">保存済みの設定でモデル一覧を 1 回だけ取得します。自動では再試行しません。</string>
+    <string name="settings_check_action">接続を確認</string>
+    <string name="settings_check_requires_saved">3 項目を保存すると接続を確認できます</string>
+    <string name="settings_check_success">接続できました</string>
+    <string name="settings_check_unauthorized">認証に失敗しました（HTTP %1$d）。API キーを確認してください</string>
+    <string name="settings_check_http_error">接続先がエラーを返しました（HTTP %1$d）。base URL を確認してください</string>
+    <string name="settings_check_network_error">接続できませんでした。ネットワークと base URL を確認してください</string>
 </resources>
