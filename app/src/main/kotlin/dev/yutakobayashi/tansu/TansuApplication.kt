@@ -2,6 +2,9 @@ package dev.yutakobayashi.tansu
 
 import android.app.Application
 import android.content.Context
+import dev.yutakobayashi.tansu.data.analysis.AnalysisClient
+import dev.yutakobayashi.tansu.data.analysis.AnalysisRunner
+import dev.yutakobayashi.tansu.data.analysis.ChatCompletionsAnalysisClient
 import dev.yutakobayashi.tansu.data.card.CardRepository
 import dev.yutakobayashi.tansu.data.card.SourceImageFiles
 import dev.yutakobayashi.tansu.data.card.TansuDatabase
@@ -42,6 +45,22 @@ class AppContainer(context: Context) {
 
   val cardRepository: CardRepository by lazy {
     CardRepository(database, SourceImageFiles(File(context.filesDir, SOURCE_IMAGE_DIRECTORY)), Dispatchers.IO)
+  }
+
+  /**
+   * 解析に使うクライアント。debug ビルドの E2E では HTTP を使わない偽物に差し替える。
+   *
+   * [analysisRunner] は呼び出しのたびにこの値を読むので、差し替えた後に始めた解析から新しい値を使う。
+   */
+  @Volatile var analysisClient: AnalysisClient = ChatCompletionsAnalysisClient()
+
+  val analysisRunner: AnalysisRunner by lazy {
+    AnalysisRunner(
+      repository = cardRepository,
+      credentialsProvider = byoSettingsRepository,
+      client = { credentials, image -> analysisClient.analyze(credentials, image) },
+      ioDispatcher = Dispatchers.IO,
+    )
   }
 
   val folderAccess: SafFolderAccess by lazy { SafFolderAccess(context.contentResolver) }

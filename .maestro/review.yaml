@@ -1,0 +1,41 @@
+# yamllint disable rule:document-start
+# AC19: 編集なしで「解析 → 保存」の 2 タップで完了する。AC15 の 3 人が写る画像を使う。
+#
+# debug ビルドで、.maestro/setup-folder-grid.sh を実行してから流す。
+#   android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/review.yaml
+# 解析は debug ビルド専用の deep link で偽のクライアントに差し替え、HTTP を送らない。
+# 偽のクライアントはプロセスが続くあいだだけ有効なので、deep link の後に launchApp を使わない。
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- tapOn: フォルダを選ぶ
+- tapOn: Pictures
+- tapOn: tansu-e2e
+- tapOn: USE THIS FOLDER
+- tapOn: ALLOW
+- extendedWaitUntil:
+    visible: "card-c.jpg、未処理"
+    timeout: 10000
+- openLink: tansu-debug://fake-analysis?fixture=three-people
+- extendedWaitUntil:
+    visible: "card-c.jpg、未処理"
+    timeout: 10000
+# 画像を開く。ここまでは解析も送信もしない。
+- tapOn: "card-c.jpg、未処理"
+- extendedWaitUntil:
+    visible: 解析
+    timeout: 10000
+# 1 タップ目: 解析
+- tapOn: 解析
+- extendedWaitUntil:
+    visible: "候補 1 / 3"
+    timeout: 10000
+# 既定で 3 件すべてが保存対象。
+- assertVisible: "保存（3 件）"
+# 2 タップ目: 保存
+- tapOn: "保存（3 件）"
+# 一覧へ戻り、完了のバッジが付く。
+- extendedWaitUntil:
+    visible: "card-c.jpg、完了"
+    timeout: 10000

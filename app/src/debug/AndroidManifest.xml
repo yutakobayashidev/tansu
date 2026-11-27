@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- debug ビルドだけに入る。Maestro が解析の状態を用意するために使う。 -->
+<!-- debug ビルドだけに入る。Maestro が解析の状態や解析クライアントを用意するために使う。 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
@@ -11,6 +11,16 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="tansu-debug" android:host="seed" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".debug.FakeAnalysisActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="tansu-debug" android:host="fake-analysis" />
             </intent-filter>
         </activity>
     </application>

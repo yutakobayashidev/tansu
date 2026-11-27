@@ -7,6 +7,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import dev.yutakobayashi.tansu.ui.home.HomeScreen
+import dev.yutakobayashi.tansu.ui.review.ReviewScreen
 import dev.yutakobayashi.tansu.ui.settings.SettingsScreen
 
 @Composable
@@ -22,7 +23,20 @@ fun MainNavigation() {
       listOf(rememberSaveableStateHolderNavEntryDecorator(), rememberViewModelStoreNavEntryDecorator()),
     entryProvider =
       entryProvider {
-        entry<Home> { HomeScreen(onOpenSettings = { backStack.add(Settings) }) }
+        entry<Home> {
+          HomeScreen(
+            onOpenSettings = { backStack.add(Settings) },
+            onOpenImage = { backStack.add(Review(it.uri, it.displayName)) },
+          )
+        }
+        entry<Review> { key ->
+          ReviewScreen(
+            documentUri = key.documentUri,
+            displayName = key.displayName,
+            onBack = { backStack.removeLastOrNull() },
+            onOpenSettings = { backStack.add(Settings) },
+          )
+        }
         entry<Settings> { SettingsScreen(onBack = { backStack.removeLastOrNull() }) }
       },
   )
