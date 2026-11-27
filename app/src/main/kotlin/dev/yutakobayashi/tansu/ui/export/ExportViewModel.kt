@@ -6,7 +6,7 @@ import dev.yutakobayashi.tansu.export.CardExporter
 import dev.yutakobayashi.tansu.export.ExportFormat
 import dev.yutakobayashi.tansu.export.ExportResult
 import java.io.File
-import java.io.IOException
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +43,10 @@ class ExportViewModel(private val exporter: CardExporter) : ViewModel() {
             is ExportResult.Exported -> ExportEvent.Share(result.file, result.format)
             ExportResult.NoCards -> ExportEvent.NoCards
           }
-        } catch (_: IOException) {
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          // 入出力の失敗に加えて、壊れた画像の縮小や DB の読み取りの失敗でも、書き出し中のまま固まらず失敗を知らせる。
           ExportEvent.Failed
         } finally {
           _isExporting.value = false
