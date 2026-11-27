@@ -56,6 +56,7 @@ import dev.yutakobayashi.tansu.R
 import dev.yutakobayashi.tansu.appContainer
 import dev.yutakobayashi.tansu.domain.FolderImage
 import dev.yutakobayashi.tansu.domain.ImageProgress
+import dev.yutakobayashi.tansu.ui.export.ExportAction
 import dev.yutakobayashi.tansu.ui.theme.TansuTheme
 import kotlinx.coroutines.Dispatchers
 
@@ -88,6 +89,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, onOpenImage: (FolderImage) -> Unit, m
     onOpenImage = onOpenImage,
     onPickFolder = { pickFolder.launch(selectedFolder?.toUri()) },
     loadThumbnail = thumbnails::load,
+    exportAction = { ExportAction() },
     modifier = modifier,
   )
 }
@@ -102,6 +104,7 @@ internal fun HomeScreen(
   folder: FolderUiState = FolderUiState.NotSelected,
   onPickFolder: () -> Unit = {},
   loadThumbnail: ThumbnailLoader = { _, _ -> null },
+  exportAction: @Composable () -> Unit = {},
 ) {
   Scaffold(
     modifier = modifier,
@@ -109,6 +112,7 @@ internal fun HomeScreen(
       TopAppBar(
         title = { Text(stringResource(R.string.app_name)) },
         actions = {
+          exportAction()
           TextButton(onClick = onOpenSettings, modifier = Modifier.testTag(HomeTestTags.SETTINGS_ACTION)) {
             Text(stringResource(R.string.settings_title))
           }

@@ -38,6 +38,13 @@
     <string name="property_url">URL</string>
     <string name="property_note">メモ</string>
 
+    <string name="export_action">書き出し</string>
+    <string name="export_vcard">vCard（.vcf）</string>
+    <string name="export_csv">CSV（.csv）</string>
+    <string name="export_chooser_title">名刺を共有</string>
+    <string name="export_no_cards">書き出す名刺がありません。レビューで名刺を保存してください</string>
+    <string name="export_failed">書き出しに失敗しました</string>
+
     <string name="folder_not_selected_title">フォルダを選んでください</string>
     <string name="folder_not_selected_body">名刺画像のあるフォルダを選ぶと、画像を更新日時の新しい順に並べます。アプリが読むのは選んだフォルダだけです。</string>
     <string name="folder_pick">フォルダを選ぶ</string>
