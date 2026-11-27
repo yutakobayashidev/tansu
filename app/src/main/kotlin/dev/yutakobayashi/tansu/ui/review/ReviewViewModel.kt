@@ -45,8 +45,8 @@ sealed interface ReviewUiState {
   /** レビューを終えた。画面を閉じる。 */
   data object Done : ReviewUiState
 
-  /** 既にレビューを終えた画像。保存済みの名刺の操作は画像詳細で扱う。 */
-  data object AlreadyCompleted : ReviewUiState
+  /** 既にレビューを終えた画像。保存済みの名刺の操作は、[sourceImage] の画像詳細で扱う。 */
+  data class AlreadyCompleted(val sourceImage: ContentHash) : ReviewUiState
 }
 
 /** 解析が失敗した理由。画面の文言を選ぶのに使う。 */
@@ -163,7 +163,7 @@ class ReviewViewModel(
       // 別の画面から同じ内容の画像を解析している最中に限られる。
       AnalysisStatus.Analyzing -> ReviewUiState.Analyzing
       is AnalysisStatus.AwaitingReview -> ReviewUiState.Reviewing(ReadResultReview.of(status.candidates))
-      AnalysisStatus.Completed -> ReviewUiState.AlreadyCompleted
+      AnalysisStatus.Completed -> ReviewUiState.AlreadyCompleted(sourceImage)
       AnalysisStatus.Failed -> ReviewUiState.NotAnalyzed(Failure.Unknown)
     }
 }

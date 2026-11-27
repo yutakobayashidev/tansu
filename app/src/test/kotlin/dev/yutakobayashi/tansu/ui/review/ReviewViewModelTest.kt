@@ -7,6 +7,7 @@ import dev.yutakobayashi.tansu.data.analysis.AnalysisRunner
 import dev.yutakobayashi.tansu.data.analysis.ChatCompletionsAnalysisClient
 import dev.yutakobayashi.tansu.data.analysis.pngBytes
 import dev.yutakobayashi.tansu.data.card.CardRepository
+import dev.yutakobayashi.tansu.data.card.SharedImageFiles
 import dev.yutakobayashi.tansu.data.card.SourceImageFiles
 import dev.yutakobayashi.tansu.data.card.TansuDatabase
 import dev.yutakobayashi.tansu.data.folder.FakeDocument
@@ -71,7 +72,12 @@ class ReviewViewModelTest {
     context.deleteDatabase(DATABASE)
     imageDirectory.deleteRecursively()
     database = TansuDatabase.build(context, DATABASE)
-    cards = CardRepository(database, SourceImageFiles(imageDirectory), Dispatchers.IO)
+    cards = CardRepository(
+      database,
+      SourceImageFiles(imageDirectory),
+      SharedImageFiles(File(context.cacheDir, "exports/images")),
+      Dispatchers.IO,
+    )
     folders = FolderRepository(InMemoryFolderStore(), access, database, cards, Dispatchers.IO)
     access.documents += FakeDocument.of(TREE, NAME, 1, IMAGE)
     credentials = api.credentials
@@ -236,6 +242,19 @@ class ReviewViewModelTest {
     val reopened = viewModel().await { it !is ReviewUiState.Loading }
 
     assertEquals(3, (reopened as ReviewUiState.Reviewing).review.candidates.size)
+    assertEquals(1, api.requestCount)
+  }
+
+  @Test
+  fun reopeningACompletedImageLeadsToItsImageDetail() = runBlocking {
+    val first = viewModel().also { it.await { state -> state is ReviewUiState.NotAnalyzed } }
+    api.enqueue(AnalysisFixture.ThreePeople)
+    first.analyzeAndReview()
+    first.saveAndAwait()
+
+    val reopened = viewModel().await { it !is ReviewUiState.Loading }
+
+    assertEquals(ReviewUiState.AlreadyCompleted(HASH), reopened)
     assertEquals(1, api.requestCount)
   }
 

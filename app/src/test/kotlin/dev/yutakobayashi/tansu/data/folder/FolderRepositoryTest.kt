@@ -3,6 +3,7 @@ package dev.yutakobayashi.tansu.data.folder
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.yutakobayashi.tansu.data.card.CardRepository
+import dev.yutakobayashi.tansu.data.card.SharedImageFiles
 import dev.yutakobayashi.tansu.data.card.SourceImageFiles
 import dev.yutakobayashi.tansu.data.card.TansuDatabase
 import dev.yutakobayashi.tansu.domain.Candidate
@@ -37,7 +38,12 @@ class FolderRepositoryTest {
     context.deleteDatabase(DATABASE)
     imageDirectory.deleteRecursively()
     database = TansuDatabase.build(context, DATABASE)
-    cards = CardRepository(database, SourceImageFiles(imageDirectory), Dispatchers.Unconfined)
+    cards = CardRepository(
+      database,
+      SourceImageFiles(imageDirectory),
+      SharedImageFiles(File(context.cacheDir, "exports/images")),
+      Dispatchers.Unconfined,
+    )
     repository = FolderRepository(store, access, database, cards, Dispatchers.Unconfined)
   }
 

@@ -78,6 +78,7 @@ fun ReviewScreen(
   displayName: String,
   onBack: () -> Unit,
   onOpenSettings: () -> Unit,
+  onOpenDetail: (ContentHash) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   val container = LocalContext.current.appContainer
@@ -93,7 +94,14 @@ fun ReviewScreen(
   val state by viewModel.state.collectAsStateWithLifecycle()
   val isSettingsComplete by viewModel.isSettingsComplete.collectAsStateWithLifecycle()
   val images = remember(container) { FolderThumbnails(container.folderAccess, Dispatchers.IO) }
-  LaunchedEffect(state) { if (state == ReviewUiState.Done) onBack() }
+  LaunchedEffect(state) {
+    when (val current = state) {
+      ReviewUiState.Done -> onBack()
+      // レビューを終えた画像を開いたら、保存済みの名刺を操作できる画像詳細へ移る。
+      is ReviewUiState.AlreadyCompleted -> onOpenDetail(current.sourceImage)
+      else -> Unit
+    }
+  }
   ReviewScreen(
     title = displayName,
     state = state,
@@ -146,7 +154,7 @@ internal fun ReviewScreen(
           ReviewUiState.Loading,
           ReviewUiState.Done -> Centered { CircularProgressIndicator() }
           ReviewUiState.Unavailable -> Message(stringResource(R.string.review_unavailable))
-          ReviewUiState.AlreadyCompleted -> Message(stringResource(R.string.review_already_completed))
+          is ReviewUiState.AlreadyCompleted -> Message(stringResource(R.string.review_already_completed))
           ReviewUiState.Analyzing ->
             Centered {
               Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -377,7 +385,7 @@ private fun Properties(index: Int, review: CandidateReview) {
 }
 
 @Composable
-private fun PropertyRow(label: String, value: String, attention: Attention = Attention.None, tag: String? = null) {
+internal fun PropertyRow(label: String, value: String, attention: Attention = Attention.None, tag: String? = null) {
   val colors = attentionColors(attention)
   Surface(
     color = colors?.container ?: Color.Transparent,

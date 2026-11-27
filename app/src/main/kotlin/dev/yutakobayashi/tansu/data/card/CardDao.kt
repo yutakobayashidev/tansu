@@ -63,4 +63,16 @@ internal interface CardDao {
 
   @Query("SELECT COUNT(*) FROM card WHERE source_image = :sourceImage")
   suspend fun cardCount(sourceImage: String): Int
+
+  /** [sourceImage] から保存した名刺のうち [uid] の 1 件を消す。消した行数を返す。 */
+  @Query("DELETE FROM card WHERE source_image = :sourceImage AND uid = :uid")
+  suspend fun deleteCard(sourceImage: String, uid: String): Int
+
+  /** 名刺が 1 件以上残っている名刺画像を、最後に名刺を保存した順の新しいものから返す。 */
+  @Query(
+    "SELECT source_image.* FROM source_image " +
+      "JOIN card ON card.source_image = source_image.content_hash " +
+      "GROUP BY source_image.content_hash ORDER BY MAX(card.rowid) DESC",
+  )
+  suspend fun sourceImagesWithCards(): List<SourceImageEntity>
 }

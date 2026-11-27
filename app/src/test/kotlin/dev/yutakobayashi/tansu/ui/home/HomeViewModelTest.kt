@@ -3,6 +3,7 @@ package dev.yutakobayashi.tansu.ui.home
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.yutakobayashi.tansu.data.card.CardRepository
+import dev.yutakobayashi.tansu.data.card.SharedImageFiles
 import dev.yutakobayashi.tansu.data.card.SourceImageFiles
 import dev.yutakobayashi.tansu.data.card.TansuDatabase
 import dev.yutakobayashi.tansu.data.folder.FakeDocument
@@ -45,7 +46,12 @@ class HomeViewModelTest {
     Dispatchers.setMain(main)
     context.deleteDatabase(DATABASE)
     database = TansuDatabase.build(context, DATABASE)
-    val cards = CardRepository(database, SourceImageFiles(File(context.filesDir, "source-images")), io)
+    val cards = CardRepository(
+      database,
+      SourceImageFiles(File(context.filesDir, "source-images")),
+      SharedImageFiles(File(context.cacheDir, "exports/images")),
+      io,
+    )
     val folders = FolderRepository(InMemoryFolderStore(), access, database, cards, io)
     viewModel = HomeViewModel(MutableStateFlow(ByoSettingsSummary(baseUrl = "", model = "", hasApiKey = false)), folders)
   }

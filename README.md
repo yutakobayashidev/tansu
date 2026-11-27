@@ -95,6 +95,21 @@ Maestro flows:
    android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/export-share.yaml
    ```
 
+   The image detail flows use the same setup. The first one saves cards,
+   opens the image detail, shares the copied image, then shares and deletes
+   the only card of `card-b.jpg` (AC26: the copy and its shared copy are
+   deleted, the original stays in the folder). Afterwards
+   `adb -s emulator-5554 shell run-as dev.yutakobayashi.tansu ls cache/exports/images`
+   lists only the shared copy of `card-c.jpg`. Then remove an original from the folder and check that the saved
+   copy still opens from 「保存済み」 (AC21):
+
+   ```bash
+   android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/image-detail.yaml
+   adb -s emulator-5554 shell rm /sdcard/Pictures/tansu-e2e/card-c.jpg
+   android-dev test -e APP_ID=dev.yutakobayashi.tansu \
+     .maestro/image-detail-original-removed.yaml
+   ```
+
 Return `emulator` to `false` before committing unless a change genuinely needs
 an emulator in CI.
 

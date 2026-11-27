@@ -3,6 +3,7 @@ package dev.yutakobayashi.tansu.data.analysis
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.yutakobayashi.tansu.data.card.CardRepository
+import dev.yutakobayashi.tansu.data.card.SharedImageFiles
 import dev.yutakobayashi.tansu.data.card.SourceImageFiles
 import dev.yutakobayashi.tansu.data.card.TansuDatabase
 import dev.yutakobayashi.tansu.data.settings.AnalysisCredentials
@@ -49,7 +50,12 @@ class AnalysisRunnerTest {
     imageDirectory.deleteRecursively()
     server.start()
     database = TansuDatabase.build(context, DATABASE)
-    repository = CardRepository(database, SourceImageFiles(imageDirectory), Dispatchers.IO)
+    repository = CardRepository(
+      database,
+      SourceImageFiles(imageDirectory),
+      SharedImageFiles(File(context.cacheDir, "exports/images")),
+      Dispatchers.IO,
+    )
     credentials = AnalysisCredentials(server.url("/v1").toString().trimEnd('/'), "model-a", "sk-secret")
   }
 

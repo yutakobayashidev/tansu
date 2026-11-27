@@ -6,6 +6,9 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import dev.yutakobayashi.tansu.domain.ContentHash
+import dev.yutakobayashi.tansu.ui.detail.ImageDetailScreen
+import dev.yutakobayashi.tansu.ui.detail.SavedImagesScreen
 import dev.yutakobayashi.tansu.ui.home.HomeScreen
 import dev.yutakobayashi.tansu.ui.review.ReviewScreen
 import dev.yutakobayashi.tansu.ui.settings.SettingsScreen
@@ -27,6 +30,7 @@ fun MainNavigation() {
           HomeScreen(
             onOpenSettings = { backStack.add(Settings) },
             onOpenImage = { backStack.add(Review(it.uri, it.displayName)) },
+            onOpenSavedImages = { backStack.add(SavedImages) },
           )
         }
         entry<Review> { key ->
@@ -35,7 +39,23 @@ fun MainNavigation() {
             displayName = key.displayName,
             onBack = { backStack.removeLastOrNull() },
             onOpenSettings = { backStack.add(Settings) },
+            // レビュー画面を画像詳細に置き換え、戻るとフォルダの一覧に戻るようにする。
+            onOpenDetail = { hash ->
+              if (backStack.lastOrNull() == key) {
+                backStack.removeLastOrNull()
+                backStack.add(ImageDetail(hash.value))
+              }
+            },
           )
+        }
+        entry<SavedImages> {
+          SavedImagesScreen(
+            onBack = { backStack.removeLastOrNull() },
+            onOpenImage = { backStack.add(ImageDetail(it.value)) },
+          )
+        }
+        entry<ImageDetail> { key ->
+          ImageDetailScreen(sourceImage = ContentHash(key.contentHash), onBack = { backStack.removeLastOrNull() })
         }
         entry<Settings> { SettingsScreen(onBack = { backStack.removeLastOrNull() }) }
       },
