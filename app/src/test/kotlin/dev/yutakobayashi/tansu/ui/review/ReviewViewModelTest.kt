@@ -239,6 +239,19 @@ class ReviewViewModelTest {
     assertEquals(1, api.requestCount)
   }
 
+  @Test
+  fun reopeningACompletedImageLeadsToItsImageDetail() = runBlocking {
+    val first = viewModel().also { it.await { state -> state is ReviewUiState.NotAnalyzed } }
+    api.enqueue(AnalysisFixture.ThreePeople)
+    first.analyzeAndReview()
+    first.saveAndAwait()
+
+    val reopened = viewModel().await { it !is ReviewUiState.Loading }
+
+    assertEquals(ReviewUiState.AlreadyCompleted(HASH), reopened)
+    assertEquals(1, api.requestCount)
+  }
+
   private suspend fun ReviewViewModel.analyzeAndReview(): ReviewUiState.Reviewing {
     analyze()
     return await { it is ReviewUiState.Reviewing || it is ReviewUiState.NotAnalyzed } as ReviewUiState.Reviewing

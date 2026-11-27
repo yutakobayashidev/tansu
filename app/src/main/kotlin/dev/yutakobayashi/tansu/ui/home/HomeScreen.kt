@@ -64,7 +64,12 @@ import kotlinx.coroutines.Dispatchers
 typealias ThumbnailLoader = suspend (image: FolderImage, sizePx: Int) -> ImageBitmap?
 
 @Composable
-fun HomeScreen(onOpenSettings: () -> Unit, onOpenImage: (FolderImage) -> Unit, modifier: Modifier = Modifier) {
+fun HomeScreen(
+  onOpenSettings: () -> Unit,
+  onOpenImage: (FolderImage) -> Unit,
+  onOpenSavedImages: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
   val container = LocalContext.current.appContainer
   val viewModel: HomeViewModel = viewModel {
     HomeViewModel(container.byoSettingsRepository.summary, container.folderRepository)
@@ -87,6 +92,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, onOpenImage: (FolderImage) -> Unit, m
     folder = folder,
     onOpenSettings = onOpenSettings,
     onOpenImage = onOpenImage,
+    onOpenSavedImages = onOpenSavedImages,
     onPickFolder = { pickFolder.launch(selectedFolder?.toUri()) },
     loadThumbnail = thumbnails::load,
     exportAction = { ExportAction() },
@@ -101,6 +107,7 @@ internal fun HomeScreen(
   onOpenSettings: () -> Unit,
   modifier: Modifier = Modifier,
   onOpenImage: (FolderImage) -> Unit = {},
+  onOpenSavedImages: () -> Unit = {},
   folder: FolderUiState = FolderUiState.NotSelected,
   onPickFolder: () -> Unit = {},
   loadThumbnail: ThumbnailLoader = { _, _ -> null },
@@ -112,6 +119,9 @@ internal fun HomeScreen(
       TopAppBar(
         title = { Text(stringResource(R.string.app_name)) },
         actions = {
+          TextButton(onClick = onOpenSavedImages, modifier = Modifier.testTag(HomeTestTags.SAVED_IMAGES_ACTION)) {
+            Text(stringResource(R.string.saved_images_action))
+          }
           exportAction()
           TextButton(onClick = onOpenSettings, modifier = Modifier.testTag(HomeTestTags.SETTINGS_ACTION)) {
             Text(stringResource(R.string.settings_title))
@@ -319,6 +329,7 @@ private val THUMBNAIL_SIZE = 160.dp
 
 object HomeTestTags {
   const val SETTINGS_ACTION = "home_settings_action"
+  const val SAVED_IMAGES_ACTION = "home_saved_images_action"
   const val SETTINGS_REQUIRED_NOTICE = "home_settings_required_notice"
   const val FOLDER_NOT_SELECTED = "home_folder_not_selected"
   const val FOLDER_UNAVAILABLE = "home_folder_unavailable"

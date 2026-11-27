@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.yutakobayashi.tansu.domain.AnalysisStatus
 import dev.yutakobayashi.tansu.domain.Candidate
+import dev.yutakobayashi.tansu.domain.Card
 import dev.yutakobayashi.tansu.domain.CardDetails
 import dev.yutakobayashi.tansu.domain.ConfirmationResult
 import dev.yutakobayashi.tansu.domain.ContentHash
@@ -214,6 +215,71 @@ class CardRepositoryTest {
     assertTrue(review.exceptionOrNull() is IllegalStateException)
     assertEquals(AnalysisStatus.NotAnalyzed, repository.analysis(hash)!!.status)
     assertTrue(repository.file(repository.sourceImage(hash)!!).exists())
+  }
+
+  @Test
+  fun deletingOneOfSeveralCardsKeepsTheCopy() = runTest {
+    val (hash, saved) = saveCards(IMAGE, "山田 太郎", "佐藤 花子")
+    val file = repository.file(repository.sourceImage(hash)!!)
+
+    val outcome = repository.deleteCard(hash, saved[0].uid)
+
+    assertEquals(CardDeletionOutcome.CardsRemain, outcome)
+    assertEquals(listOf(saved[1]), repository.cards(hash))
+    assertEquals(AnalysisStatus.Completed, repository.analysis(hash)!!.status)
+    assertArrayEquals(IMAGE, file.readBytes())
+  }
+
+  @Test
+  fun deletingTheLastCardDeletesTheCopy() = runTest {
+    // AC26: 名刺 0 件で複製も削除する。原本はフォルダ側にあり、このクラスは触れない。
+    val (hash, saved) = saveCards(IMAGE, "山田 太郎")
+    val file = repository.file(repository.sourceImage(hash)!!)
+
+    val outcome = repository.deleteCard(hash, saved[0].uid)
+
+    assertEquals(CardDeletionOutcome.SourceImageDiscarded, outcome)
+    assertTrue(repository.cards(hash).isEmpty())
+    assertNull(repository.sourceImage(hash))
+    assertNull(repository.analysis(hash))
+    assertFalse(file.exists())
+    assertTrue(repository.savedCards().isEmpty())
+  }
+
+  @Test
+  fun deletingACardOfAnotherImageIsRejected() = runTest {
+    val (hash, _) = saveCards(IMAGE, "山田 太郎")
+    val (_, other) = saveCards(OTHER_IMAGE, "佐藤 花子")
+
+    val result = runCatching { repository.deleteCard(hash, other[0].uid) }
+
+    assertTrue(result.exceptionOrNull() is IllegalStateException)
+    assertEquals(1, repository.cards(hash).size)
+    assertEquals(2, repository.savedCards().size)
+  }
+
+  @Test
+  fun savedImagesListImagesWithCardsNewestFirst() = runTest {
+    val (first, firstCards) = saveCards(IMAGE, "山田 太郎", "佐藤 花子")
+    val (second, secondCards) = saveCards(OTHER_IMAGE, "Jane Doe")
+    val pending = repository.import(ByteArrayInputStream(ByteArray(16) { it.toByte() })).sourceImage
+
+    val images = repository.savedImages()
+
+    assertEquals(listOf(second, first), images.map { it.image.contentHash })
+    assertEquals(listOf(secondCards, firstCards), images.map { it.cards })
+    assertFalse(images.any { it.image.contentHash == pending })
+  }
+
+  /** [bytes] を取り込み、[names] の候補をすべて確定して保存する。 */
+  private suspend fun saveCards(bytes: ByteArray, vararg names: String): Pair<ContentHash, List<Card>> {
+    val hash = repository.import(ByteArrayInputStream(bytes)).sourceImage
+    repository.startAnalysis(hash)
+    val candidates = names.map { candidate(hash, it) }
+    repository.recordReadResult(hash, candidates)
+    val cards = candidates.map { (it.confirm() as ConfirmationResult.Confirmed).card }
+    repository.completeReview(hash, cards)
+    return hash to cards
   }
 
   /** データベースを閉じて開き直す。プロセスが落ちて再起動したときと同じ経路を通る。 */

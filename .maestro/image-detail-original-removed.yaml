@@ -1,0 +1,33 @@
+# yamllint disable rule:document-start
+# AC21: フォルダから原本を消しても、保存済みの一覧から画像詳細を開ける。
+#
+# image-detail.yaml の後に、フォルダから card-c.jpg を消してから流す。
+#   adb -s SERIAL shell rm /sdcard/Pictures/tansu-e2e/card-c.jpg
+#   android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/image-detail-original-removed.yaml
+appId: ${APP_ID}
+---
+- launchApp
+- extendedWaitUntil:
+    visible: "card-b.jpg、未処理"
+    timeout: 10000
+- assertNotVisible: "card-c.jpg.*"
+- tapOn: 保存済み
+- extendedWaitUntil:
+    visible: "山田 太郎.*"
+    timeout: 10000
+- tapOn: "山田 太郎.*"
+- extendedWaitUntil:
+    visible: "この画像から保存した名刺（3 件）"
+    timeout: 10000
+- tapOn: 名刺画像
+- tapOn: 名刺画像
+# 名刺が残るうちは、複製も残る。
+- tapOn:
+    text: 削除
+    index: 0
+- assertVisible: "「山田 太郎」を削除しますか？"
+- assertVisible: "名刺を削除すると、書き出しにも含まれなくなります.*"
+- tapOn: 削除する
+- extendedWaitUntil:
+    visible: "この画像から保存した名刺（2 件）"
+    timeout: 10000

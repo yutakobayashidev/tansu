@@ -13,6 +13,7 @@ import dev.yutakobayashi.tansu.domain.ContentHash
 import dev.yutakobayashi.tansu.domain.ImageProgress
 import dev.yutakobayashi.tansu.domain.SavedCard
 import dev.yutakobayashi.tansu.domain.SourceImage
+import dev.yutakobayashi.tansu.domain.Uid
 import java.io.File
 import java.io.InputStream
 import kotlinx.coroutines.CoroutineDispatcher
@@ -24,7 +25,7 @@ import kotlinx.coroutines.withContext
 /**
  * 名刺画像の取り込みから、解析の状態遷移、名刺の確定までを保存する。
  *
- * 名刺画像の複製は、参照する名刺が 0 件のままレビューを終えた時点で消す。
+ * 名刺画像の複製は、参照する名刺が 0 件になった時点（レビューを終えたとき、または名刺を削除したとき）で消す。
  * ファイルの書き込みと削除が食い違わないよう、変更はすべて直列に実行する。
  */
 class CardRepository(
@@ -119,20 +120,49 @@ class CardRepository(
       transition(sourceImage, from = listOf(AWAITING_REVIEW), to = COMPLETED)
       dao.deleteCandidates(sourceImage.value)
       dao.insertCards(cards.map { it.toEntity(sourceImage) })
-      if (dao.cardCount(sourceImage.value) == 0) {
-        val image = checkNotNull(dao.sourceImage(sourceImage.value)).toDomain()
-        dao.deleteSourceImage(sourceImage.value)
-        image
-      } else {
-        null
+      discardIfUnreferenced(sourceImage)
+    }
+    discarded?.let { files.delete(it.copiedFile) }
+    if (discarded == null) ReviewOutcome.CardsSaved else ReviewOutcome.SourceImageDiscarded
+  }
+
+  /** 名刺が 1 件以上残っている名刺画像と、その名刺。最後に名刺を保存した画像から並べる。 */
+  suspend fun savedImages(): List<SavedImage> = withContext(ioDispatcher) {
+    database.withTransaction {
+      dao.sourceImagesWithCards().map { image ->
+        SavedImage(image.toDomain(), dao.cards(image.contentHash).map { it.toDomain() })
       }
     }
-    if (discarded == null) {
-      ReviewOutcome.CardsSaved
-    } else {
-      files.delete(discarded.copiedFile)
-      ReviewOutcome.SourceImageDiscarded
+  }
+
+  /**
+   * [sourceImage] から保存した名刺 [uid] を削除する（ADR 0005）。
+   *
+   * 名刺画像を参照する名刺が 0 件になったら、名刺画像と解析を消し、アプリ内の複製も削除する。
+   * フォルダにある原本は、このクラスからは読み書きしないので残る。
+   */
+  suspend fun deleteCard(sourceImage: ContentHash, uid: Uid): CardDeletionOutcome = write {
+    val discarded = database.withTransaction {
+      check(dao.deleteCard(sourceImage.value, uid.toString()) == 1) {
+        "Card $uid of $sourceImage does not exist"
+      }
+      discardIfUnreferenced(sourceImage)
     }
+    discarded?.let { files.delete(it.copiedFile) }
+    if (discarded == null) CardDeletionOutcome.CardsRemain else CardDeletionOutcome.SourceImageDiscarded
+  }
+
+  /**
+   * 名刺画像を参照する名刺が 0 件なら、名刺画像の行を消し（解析と候補も連鎖して消える）、消した名刺画像を返す。
+   *
+   * 複製のファイルは、呼び出し側がトランザクションをコミットしてから消す。巻き戻ったときに、
+   * 行が残っているのにファイルだけが無い状態を作らないためである。
+   */
+  private suspend fun discardIfUnreferenced(sourceImage: ContentHash): SourceImage? {
+    if (dao.cardCount(sourceImage.value) != 0) return null
+    val image = checkNotNull(dao.sourceImage(sourceImage.value)).toDomain()
+    dao.deleteSourceImage(sourceImage.value)
+    return image
   }
 
   private suspend fun <T> write(block: suspend () -> T): T =
@@ -172,3 +202,15 @@ enum class ReviewOutcome {
   /** 名刺が 0 件になったため、名刺画像の複製を削除した。 */
   SourceImageDiscarded,
 }
+
+/** 保存済みの名刺を削除した結果。 */
+enum class CardDeletionOutcome {
+  /** 同じ名刺画像から保存した名刺が、まだ 1 件以上残っている。 */
+  CardsRemain,
+
+  /** 名刺が 0 件になったため、名刺画像の複製を削除した。フォルダの原本は残っている。 */
+  SourceImageDiscarded,
+}
+
+/** 名刺を 1 件以上保存した名刺画像と、そこから保存した名刺。[cards] は保存した順。 */
+data class SavedImage(val image: SourceImage, val cards: List<Card>)

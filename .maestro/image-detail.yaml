@@ -1,0 +1,63 @@
+# yamllint disable rule:document-start
+# 画像詳細（#13）。保存済みの名刺の一覧・画像の全画面表示・共有と、削除の AC26 を確かめる。
+#
+# debug ビルドで、.maestro/setup-folder-grid.sh を実行してから流す。
+#   android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/image-detail.yaml
+# 続けて原本を消し、image-detail-original-removed.yaml で AC21 を確かめる。
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- tapOn: フォルダを選ぶ
+- tapOn: Pictures
+- tapOn: tansu-e2e
+- tapOn: USE THIS FOLDER
+- tapOn: ALLOW
+- extendedWaitUntil:
+    visible: "card-c.jpg、未処理"
+    timeout: 10000
+# card-b に名刺を 1 件保存する（debug ビルド専用の deep link）。
+- openLink: tansu-debug://seed?name=card-b.jpg&state=completed
+# card-c は 3 人が写る画像として、偽の解析クライアントで解析して 3 件保存する。
+- openLink: tansu-debug://fake-analysis?fixture=three-people
+- extendedWaitUntil:
+    visible: "card-c.jpg、未処理"
+    timeout: 10000
+- tapOn: "card-c.jpg、未処理"
+- tapOn: 解析
+- tapOn: "保存（3 件）"
+- extendedWaitUntil:
+    visible: "card-c.jpg、完了"
+    timeout: 10000
+- extendedWaitUntil:
+    visible: "card-b.jpg、完了"
+    timeout: 10000
+# レビューを終えた画像を開くと、画像詳細になる。
+- tapOn: "card-c.jpg、完了"
+- extendedWaitUntil:
+    visible: "この画像から保存した名刺（3 件）"
+    timeout: 10000
+- assertVisible: 画像詳細
+# 画像を押すと全画面で表示し、もう一度押すと閉じる。
+- tapOn: 名刺画像
+- tapOn: 名刺画像
+# 複製を共有シートで渡す。Android 16 の共有シートは、画像では独自のタイトルを出さず「Sharing image」と表示する。
+- tapOn: 共有
+- extendedWaitUntil:
+    visible: "Sharing image"
+    timeout: 10000
+- back
+- back
+# AC26: 名刺が 1 件だけの画像で削除する。確認で、複製も消えて原本は残ることを伝える。
+- tapOn: "card-b.jpg、完了"
+- extendedWaitUntil:
+    visible: "この画像から保存した名刺（1 件）"
+    timeout: 10000
+- tapOn: 削除
+- assertVisible: "「見本 太郎」を削除しますか？"
+- assertVisible: "この画像から保存した最後の名刺です.*"
+- tapOn: 削除する
+# 画像詳細が閉じ、フォルダの一覧に戻る。原本は残るので、未処理の画像として並ぶ。
+- extendedWaitUntil:
+    visible: "card-b.jpg、未処理"
+    timeout: 10000

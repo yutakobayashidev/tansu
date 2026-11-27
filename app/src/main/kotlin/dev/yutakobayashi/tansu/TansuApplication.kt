@@ -17,6 +17,8 @@ import dev.yutakobayashi.tansu.data.settings.KeystoreSecretCipher
 import dev.yutakobayashi.tansu.data.settings.ModelsEndpointConnectionChecker
 import dev.yutakobayashi.tansu.data.settings.SharedPreferencesByoSettingsStore
 import dev.yutakobayashi.tansu.export.CardExporter
+import dev.yutakobayashi.tansu.ui.detail.CopiedImages
+import dev.yutakobayashi.tansu.ui.detail.SharedImageFiles
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 
@@ -68,6 +70,13 @@ class AppContainer(context: Context) {
     CardExporter(cardRepository, File(context.cacheDir, EXPORT_DIRECTORY), ioDispatcher = Dispatchers.IO)
   }
 
+  /** 画像詳細と保存済みの一覧で共有し、画面を行き来しても縮小画像を読み直さない。 */
+  val copiedImages: CopiedImages by lazy { CopiedImages(Dispatchers.IO) }
+
+  val sharedImageFiles: SharedImageFiles by lazy {
+    SharedImageFiles(File(context.cacheDir, SHARED_IMAGE_DIRECTORY), Dispatchers.IO)
+  }
+
   val folderAccess: SafFolderAccess by lazy { SafFolderAccess(context.contentResolver) }
 
   val folderRepository: FolderRepository by lazy {
@@ -88,6 +97,9 @@ class AppContainer(context: Context) {
 
     /** res/xml/export_paths.xml の `cache-path` と揃える。 */
     const val EXPORT_DIRECTORY = "exports"
+
+    /** 共有する名刺画像の写し。[EXPORT_DIRECTORY] の下に置き、同じ `cache-path` で渡す。 */
+    const val SHARED_IMAGE_DIRECTORY = "exports/images"
   }
 }
 
