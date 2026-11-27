@@ -1,0 +1,5 @@
+uid,fn,n,org,title,tel,email,adr,url,note,photo_sha256
+urn:uuid:00000000-0000-4000-8000-000000000001,山田 太郎,山田;太郎;;;,株式会社サンプル商事,営業部 部長,03-0000-0000;090-0000-0000,taro.yamada@example.co.jp,〒100-0000 東京都千代田区架空町1-2-3 サンプルビル5F,https://www.example.co.jp/,,dd86f1fe1772698cc804e43974f23b5d8e1d9aadf6c683370bc7e74e4cd03f7b
+urn:uuid:00000000-0000-4000-8000-000000000002,山田 太郎,山田;太郎;;;,株式会社サンプル商事,営業部 部長,03-0000-0000,taro.yamada@example.co.jp,,,,6b9d7fe1b94961b9b088c2832da9b1760fe524599a8840c8e5708e889acadf0b
+urn:uuid:00000000-0000-4000-8000-000000000003,Jane Doe,Doe;Jane;;;,Example Widgets Inc.,,,jane.doe@example.com,,https://www.example.com/,,6b9d7fe1b94961b9b088c2832da9b1760fe524599a8840c8e5708e889acadf0b
+urn:uuid:00000000-0000-4000-8000-000000000004,佐藤 花子,,架空大学,准教授,06-0000-0000,,,,,6b9d7fe1b94961b9b088c2832da9b1760fe524599a8840c8e5708e889acadf0b

@@ -1,0 +1,40 @@
+# yamllint disable rule:document-start
+# 書き出しと共有シート（#14）。保存済みの名刺を vCard / CSV に書き出し、ACTION_SEND で渡す。
+#
+# debug ビルドで、.maestro/setup-folder-grid.sh を実行してから流す。
+#   android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/export-share.yaml
+# フォルダ選択は DocumentsUI（英語ロケール）を操作する。
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- tapOn: フォルダを選ぶ
+- tapOn: Pictures
+- tapOn: tansu-e2e
+- tapOn: USE THIS FOLDER
+- tapOn: ALLOW
+- extendedWaitUntil:
+    visible: "card-b.jpg、未処理"
+    timeout: 10000
+# 名刺が無いうちは書き出さず、理由を出す。
+- tapOn: 書き出し
+- tapOn: vCard（.vcf）
+- assertVisible: "書き出す名刺がありません.*"
+# 解析クライアントを通さずに名刺を 1 件保存する（debug ビルド専用の deep link）。
+- openLink: tansu-debug://seed?name=card-b.jpg&state=completed
+- launchApp
+- extendedWaitUntil:
+    visible: "card-b.jpg、完了"
+    timeout: 10000
+- tapOn: 書き出し
+- tapOn: vCard（.vcf）
+- extendedWaitUntil:
+    visible: "tansu.vcf"
+    timeout: 10000
+- back
+- tapOn: 書き出し
+- tapOn: CSV（.csv）
+- extendedWaitUntil:
+    visible: "tansu.csv"
+    timeout: 10000
+- back

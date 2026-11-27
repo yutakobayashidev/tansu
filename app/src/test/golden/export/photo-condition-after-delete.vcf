@@ -1,0 +1,25 @@
+BEGIN:VCARD
+VERSION:4.0
+UID:urn:uuid:00000000-0000-4000-8000-000000000001
+FN:山田 太郎
+N:山田;太郎;;;
+ORG:株式会社サンプル商事
+TITLE:営業部 部長
+TEL:03-0000-0000
+TEL:090-0000-0000
+EMAIL:taro.yamada@example.co.jp
+ADR:;;〒100-0000 東京都千代田区架空町1-2-3 サンプルビル5F;
+ ;;;
+URL:https://www.example.co.jp/
+PHOTO:data:image/jpeg;base64,anBlZzo1MTI6ODU6aW1hZ2UgQTogb25lIGNhcmQ=
+END:VCARD
+BEGIN:VCARD
+VERSION:4.0
+UID:urn:uuid:00000000-0000-4000-8000-000000000002
+FN:山田 太郎
+N:山田;太郎;;;
+ORG:株式会社サンプル商事
+TITLE:営業部 部長
+TEL:03-0000-0000
+EMAIL:taro.yamada@example.co.jp
+END:VCARD

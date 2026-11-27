@@ -17,7 +17,8 @@ internal data class SourceImageEntity(
 /**
  * 名刺画像 1 枚に対する解析。名刺画像と 1 対 1 で、主キーも内容ハッシュにする。
  *
- * 名刺画像を消すと解析と候補も消える。
+ * 名刺画像を消すと解析と候補も消える。[candidateCount] は読み取り結果を記録したときの候補の件数で、
+ * レビューで候補を消した後も残す。vCard の `PHOTO` を埋め込むかの判定に使う。
  */
 @Entity(
   tableName = "analysis",
@@ -33,6 +34,7 @@ internal data class SourceImageEntity(
 internal data class AnalysisEntity(
   @PrimaryKey @ColumnInfo(name = "source_image") val sourceImage: String,
   val status: StoredAnalysisStatus,
+  @ColumnInfo(name = "candidate_count") val candidateCount: Int? = null,
 )
 
 internal enum class StoredAnalysisStatus {
@@ -97,4 +99,10 @@ internal data class DetailsColumns(
   val adr: String?,
   val url: String?,
   val note: String?,
+)
+
+/** 保存済みの名刺と、取り込み元の解析が返した候補の件数。 */
+internal data class SavedCardRow(
+  @Embedded val card: CardEntity,
+  @ColumnInfo(name = "candidate_count") val candidateCount: Int?,
 )

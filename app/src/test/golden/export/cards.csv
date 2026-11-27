@@ -1,0 +1,6 @@
+uid,fn,n,org,title,tel,email,adr,url,note,photo_sha256
+urn:uuid:00000000-0000-4000-8000-000000000001,山田 太郎,山田;太郎;;;,株式会社サンプル商事,営業部 部長,03-0000-0000;090-0000-0000,taro.yamada@example.co.jp,〒100-0000 東京都千代田区架空町1-2-3 サンプルビル5F,https://www.example.co.jp/,,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+urn:uuid:00000000-0000-4000-8000-000000000002,Jane Doe,Doe;Jane;;;,Example Widgets Inc.,Head of Partnerships,+1 555-0100,jane.doe@example.com,"100 Example Street, Suite 200, Springfield, ZZ 00000, USA",https://www.example.com/,,bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+urn:uuid:00000000-0000-4000-8000-000000000003,高橋 次郎,高橋;次郎;;;,"合同会社 ""テスト, 研究所""
+第二開発部","主任研究員, ""R&D""",045-000-0000,jiro.takahashi@example.org,,,"1行目
+2行目",cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc

@@ -36,6 +36,9 @@ internal interface CardDao {
     to: StoredAnalysisStatus,
   ): Int
 
+  @Query("UPDATE analysis SET candidate_count = :count WHERE source_image = :sourceImage")
+  suspend fun setCandidateCount(sourceImage: String, count: Int)
+
   @Insert
   suspend fun insertCandidates(entities: List<CandidateEntity>)
 
@@ -50,6 +53,13 @@ internal interface CardDao {
 
   @Query("SELECT * FROM card WHERE source_image = :sourceImage ORDER BY rowid")
   suspend fun cards(sourceImage: String): List<CardEntity>
+
+  /** すべての名刺を保存した順に返す。書き出しを繰り返しても同じ順になる。 */
+  @Query(
+    "SELECT card.*, analysis.candidate_count AS candidate_count FROM card " +
+      "LEFT JOIN analysis ON analysis.source_image = card.source_image ORDER BY card.rowid",
+  )
+  suspend fun savedCards(): List<SavedCardRow>
 
   @Query("SELECT COUNT(*) FROM card WHERE source_image = :sourceImage")
   suspend fun cardCount(sourceImage: String): Int

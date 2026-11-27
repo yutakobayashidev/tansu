@@ -11,6 +11,7 @@ import dev.yutakobayashi.tansu.domain.Candidate
 import dev.yutakobayashi.tansu.domain.Card
 import dev.yutakobayashi.tansu.domain.ContentHash
 import dev.yutakobayashi.tansu.domain.ImageProgress
+import dev.yutakobayashi.tansu.domain.SavedCard
 import dev.yutakobayashi.tansu.domain.SourceImage
 import java.io.File
 import java.io.InputStream
@@ -76,12 +77,21 @@ class CardRepository(
     dao.cards(sourceImage.value).map { it.toDomain() }
   }
 
+  /** すべての保存済みの名刺を、保存した順に返す。 */
+  suspend fun savedCards(): List<SavedCard> = withContext(ioDispatcher) {
+    dao.savedCards().map { it.toDomain() }
+  }
+
   /** `未解析` または `失敗` の解析を `解析中` にする。 */
   suspend fun startAnalysis(sourceImage: ContentHash): Unit = write {
     transition(sourceImage, from = listOf(NOT_ANALYZED, FAILED), to = ANALYZING)
   }
 
-  /** `解析中` の解析に読み取り結果を記録し、`確認待ち` にする。候補が 0 件なら該当なし。 */
+  /**
+   * `解析中` の解析に読み取り結果を記録し、`確認待ち` にする。候補が 0 件なら該当なし。
+   *
+   * 候補の件数も記録する。レビューの後も残り、書き出しで `PHOTO` を埋め込むかを決める。
+   */
   suspend fun recordReadResult(sourceImage: ContentHash, candidates: List<Candidate>): Unit =
     write {
       require(candidates.all { it.sourceImage == sourceImage }) {
@@ -89,6 +99,7 @@ class CardRepository(
       }
       database.withTransaction {
         transition(sourceImage, from = listOf(ANALYZING), to = AWAITING_REVIEW)
+        dao.setCandidateCount(sourceImage.value, candidates.size)
         dao.insertCandidates(candidates.mapIndexed { index, candidate -> candidate.toEntity(index) })
       }
     }

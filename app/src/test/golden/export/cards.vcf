@@ -1,0 +1,52 @@
+BEGIN:VCARD
+VERSION:4.0
+UID:urn:uuid:00000000-0000-4000-8000-000000000001
+FN:山田 太郎
+N:山田;太郎;;;
+ORG:株式会社サンプル商事
+TITLE:営業部 部長
+TEL:03-0000-0000
+TEL:090-0000-0000
+EMAIL:taro.yamada@example.co.jp
+ADR:;;〒100-0000 東京都千代田区架空町1-2-3 サンプルビル5F;
+ ;;;
+URL:https://www.example.co.jp/
+END:VCARD
+BEGIN:VCARD
+VERSION:4.0
+UID:urn:uuid:00000000-0000-4000-8000-000000000002
+FN:Jane Doe
+N:Doe;Jane;;;
+ORG:Example Widgets Inc.
+TITLE:Head of Partnerships
+TEL:+1 555-0100
+EMAIL:jane.doe@example.com
+ADR:;;100 Example Street\, Suite 200\, Springfield\, ZZ 00000\, USA;;;;
+URL:https://www.example.com/
+END:VCARD
+BEGIN:VCARD
+VERSION:4.0
+UID:urn:uuid:00000000-0000-4000-8000-000000000003
+FN:高橋 次郎
+N:高橋;次郎;;;
+ORG:合同会社 "テスト\, 研究所"\n第二開発部
+TITLE:主任研究員\, "R&D"
+TEL:045-000-0000
+EMAIL:jiro.takahashi@example.org
+NOTE:1行目\n2行目
+END:VCARD
+BEGIN:VCARD
+VERSION:4.0
+UID:urn:uuid:00000000-0000-4000-8000-000000000004
+FN:Long Note
+URL:https://example.com/path?a=1,b=2;c=3
+NOTE:a名刺の裏面に記載された長いメモ。名刺の裏面に記
+ 載された長いメモ。名刺の裏面に記載された長いメモ
+ 。名刺の裏面に記載された長いメモ。名刺の裏面に記
+ 載された長いメモ。名刺の裏面に記載された長いメモ
+ 。名刺の裏面に記載された長いメモ。名刺の裏面に記
+ 載された長いメモ。
+PHOTO:data:image/jpeg;base64,AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gIS
+ IjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZ
+ WltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3
+END:VCARD

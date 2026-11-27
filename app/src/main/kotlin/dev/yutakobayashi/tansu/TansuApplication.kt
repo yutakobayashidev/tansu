@@ -13,6 +13,7 @@ import dev.yutakobayashi.tansu.data.settings.ConnectionChecker
 import dev.yutakobayashi.tansu.data.settings.KeystoreSecretCipher
 import dev.yutakobayashi.tansu.data.settings.ModelsEndpointConnectionChecker
 import dev.yutakobayashi.tansu.data.settings.SharedPreferencesByoSettingsStore
+import dev.yutakobayashi.tansu.export.CardExporter
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 
@@ -44,6 +45,10 @@ class AppContainer(context: Context) {
     CardRepository(database, SourceImageFiles(File(context.filesDir, SOURCE_IMAGE_DIRECTORY)), Dispatchers.IO)
   }
 
+  val cardExporter: CardExporter by lazy {
+    CardExporter(cardRepository, File(context.cacheDir, EXPORT_DIRECTORY), ioDispatcher = Dispatchers.IO)
+  }
+
   val folderAccess: SafFolderAccess by lazy { SafFolderAccess(context.contentResolver) }
 
   val folderRepository: FolderRepository by lazy {
@@ -61,6 +66,9 @@ class AppContainer(context: Context) {
 
   private companion object {
     const val SOURCE_IMAGE_DIRECTORY = "source-images"
+
+    /** res/xml/export_paths.xml の `cache-path` と揃える。 */
+    const val EXPORT_DIRECTORY = "exports"
   }
 }
 
