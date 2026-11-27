@@ -19,3 +19,4 @@
 | [0002](0002-select-image-folder-via-saf.md) | Accepted | 名刺画像フォルダは SAF で指定する |
 | [0003](0003-extract-all-cards-and-keep-original-images.md) | Accepted | 1画像を解析して N 件の候補を全件扱い、画像は無加工で複製保持する |
 | [0004](0004-export-vcard4-and-csv-with-conditional-photo.md) | Accepted | 出力は vCard 4.0 + CSV とし、PHOTO は候補が1件のときだけ縮小版を埋め込む。CSV は `photo_sha256` で画像を参照する |
+| [0005](0005-delete-saved-cards-in-v1.md) | Accepted | 保存済み名刺の削除を v1 に含める。最後の 1 件を消すと複製も削除し、原本は残す |
