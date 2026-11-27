@@ -96,9 +96,11 @@ Maestro flows:
    ```
 
    The image detail flows use the same setup. The first one saves cards,
-   opens the image detail, shares the copied image, and deletes the only card
-   of `card-b.jpg` (AC26: the copy is deleted, the original stays in the
-   folder). Then remove an original from the folder and check that the saved
+   opens the image detail, shares the copied image, then shares and deletes
+   the only card of `card-b.jpg` (AC26: the copy and its shared copy are
+   deleted, the original stays in the folder). Afterwards
+   `adb -s emulator-5554 shell run-as dev.yutakobayashi.tansu ls cache/exports/images`
+   lists only the shared copy of `card-c.jpg`. Then remove an original from the folder and check that the saved
    copy still opens from 「保存済み」 (AC21):
 
    ```bash

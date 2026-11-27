@@ -47,6 +47,7 @@
     <string name="detail_share">共有</string>
     <string name="detail_share_chooser_title">名刺画像を共有</string>
     <string name="detail_share_failed">画像を共有できませんでした</string>
+    <string name="detail_delete_failed">名刺を削除できませんでした</string>
     <string name="detail_view_full">画像を全画面で表示</string>
     <string name="detail_close_full">全画面表示を閉じる</string>
     <string name="detail_cards">この画像から保存した名刺（%1$d 件）</string>

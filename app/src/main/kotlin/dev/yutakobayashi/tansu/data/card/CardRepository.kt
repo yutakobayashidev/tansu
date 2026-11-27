@@ -26,11 +26,13 @@ import kotlinx.coroutines.withContext
  * 名刺画像の取り込みから、解析の状態遷移、名刺の確定までを保存する。
  *
  * 名刺画像の複製は、参照する名刺が 0 件になった時点（レビューを終えたとき、または名刺を削除したとき）で消す。
+ * 複製から作った共有用の写しも同時に消す。
  * ファイルの書き込みと削除が食い違わないよう、変更はすべて直列に実行する。
  */
 class CardRepository(
   private val database: TansuDatabase,
   private val files: SourceImageFiles,
+  private val sharedImages: SharedImageFiles,
   private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
   private val dao = database.cardDao()
@@ -122,7 +124,7 @@ class CardRepository(
       dao.insertCards(cards.map { it.toEntity(sourceImage) })
       discardIfUnreferenced(sourceImage)
     }
-    discarded?.let { files.delete(it.copiedFile) }
+    discarded?.let { deleteFiles(it) }
     if (discarded == null) ReviewOutcome.CardsSaved else ReviewOutcome.SourceImageDiscarded
   }
 
@@ -148,8 +150,18 @@ class CardRepository(
       }
       discardIfUnreferenced(sourceImage)
     }
-    discarded?.let { files.delete(it.copiedFile) }
+    discarded?.let { deleteFiles(it) }
     if (discarded == null) CardDeletionOutcome.CardsRemain else CardDeletionOutcome.SourceImageDiscarded
+  }
+
+  /**
+   * 名刺画像 [sourceImage] の複製から、共有シートへ渡すファイルを作る。
+   *
+   * 名刺画像がもう無いか、画像として読めなければ `null` を返す。名刺の削除と直列に実行するので、
+   * 複製を消した後に写しだけが作られることはない。
+   */
+  suspend fun shareImage(sourceImage: ContentHash): SharedImage? = write {
+    dao.sourceImage(sourceImage.value)?.toDomain()?.let { sharedImages.prepare(files.resolve(it.copiedFile)) }
   }
 
   /**
@@ -163,6 +175,12 @@ class CardRepository(
     val image = checkNotNull(dao.sourceImage(sourceImage.value)).toDomain()
     dao.deleteSourceImage(sourceImage.value)
     return image
+  }
+
+  /** 消した名刺画像の複製と、そこから作った共有用の写しを削除する。 */
+  private fun deleteFiles(image: SourceImage) {
+    files.delete(image.copiedFile)
+    sharedImages.delete(image.copiedFile)
   }
 
   private suspend fun <T> write(block: suspend () -> T): T =

@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.yutakobayashi.tansu.R
 import dev.yutakobayashi.tansu.appContainer
+import dev.yutakobayashi.tansu.data.card.SharedImage
 import dev.yutakobayashi.tansu.domain.Card
 import dev.yutakobayashi.tansu.domain.CardDetails
 import dev.yutakobayashi.tansu.domain.ContentHash
@@ -70,7 +71,7 @@ fun ImageDetailScreen(sourceImage: ContentHash, onBack: () -> Unit, modifier: Mo
   val context = LocalContext.current
   val container = context.appContainer
   val viewModel: ImageDetailViewModel = viewModel {
-    ImageDetailViewModel(sourceImage, container.cardRepository, container.sharedImageFiles)
+    ImageDetailViewModel(sourceImage, container.cardRepository)
   }
   val state by viewModel.state.collectAsStateWithLifecycle()
   LaunchedEffect(state) {
@@ -85,6 +86,8 @@ fun ImageDetailScreen(sourceImage: ContentHash, onBack: () -> Unit, modifier: Mo
         is ImageDetailEvent.Share -> context.share(event.image)
         ImageDetailEvent.ShareFailed ->
           Toast.makeText(context, R.string.detail_share_failed, Toast.LENGTH_SHORT).show()
+        ImageDetailEvent.DeleteFailed ->
+          Toast.makeText(context, R.string.detail_delete_failed, Toast.LENGTH_SHORT).show()
       }
     }
   }

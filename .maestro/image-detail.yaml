@@ -49,10 +49,16 @@ appId: ${APP_ID}
 - back
 - back
 # AC26: 名刺が 1 件だけの画像で削除する。確認で、複製も消えて原本は残ることを伝える。
+# 先に共有して写しを作り、削除で写しも消えることを確かめられるようにする（README の手順を参照）。
 - tapOn: "card-b.jpg、完了"
 - extendedWaitUntil:
     visible: "この画像から保存した名刺（1 件）"
     timeout: 10000
+- tapOn: 共有
+- extendedWaitUntil:
+    visible: "Sharing image"
+    timeout: 10000
+- back
 - tapOn: 削除
 - assertVisible: "「見本 太郎」を削除しますか？"
 - assertVisible: "この画像から保存した最後の名刺です.*"

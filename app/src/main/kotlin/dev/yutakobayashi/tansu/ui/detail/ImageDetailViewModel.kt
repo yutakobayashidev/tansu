@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.yutakobayashi.tansu.data.card.CardDeletionOutcome
 import dev.yutakobayashi.tansu.data.card.CardRepository
+import dev.yutakobayashi.tansu.data.card.SharedImage
 import dev.yutakobayashi.tansu.domain.Card
 import dev.yutakobayashi.tansu.domain.ContentHash
 import dev.yutakobayashi.tansu.domain.Uid
@@ -40,18 +41,19 @@ sealed interface ImageDetailEvent {
   data class Share(val image: SharedImage) : ImageDetailEvent
 
   data object ShareFailed : ImageDetailEvent
+
+  data object DeleteFailed : ImageDetailEvent
 }
 
 /**
  * 名刺画像 1 枚から保存した名刺を一覧し、名刺の削除と画像の共有を行う。
  *
  * 画像はアプリ内の複製から読むので、フォルダの原本を消しても開ける（AC21）。
- * 名刺を削除して 0 件になると、複製も削除される。原本には触れない（AC26、ADR 0005）。
+ * 名刺を削除して 0 件になると、複製と共有用の写しも削除される。原本には触れない（AC26、ADR 0005）。
  */
 class ImageDetailViewModel(
   private val sourceImage: ContentHash,
   private val cards: CardRepository,
-  private val sharedImages: SharedImageFiles,
 ) : ViewModel() {
   private val _state = MutableStateFlow<ImageDetailUiState>(ImageDetailUiState.Loading)
   val state: StateFlow<ImageDetailUiState> = _state.asStateFlow()
@@ -70,9 +72,16 @@ class ImageDetailViewModel(
     _state.value = current.copy(isDeleting = true)
     viewModelScope.launch {
       _state.value =
-        when (cards.deleteCard(sourceImage, uid)) {
-          CardDeletionOutcome.CardsRemain -> load()
-          CardDeletionOutcome.SourceImageDiscarded -> ImageDetailUiState.Discarded
+        try {
+          when (cards.deleteCard(sourceImage, uid)) {
+            CardDeletionOutcome.CardsRemain -> load()
+            CardDeletionOutcome.SourceImageDiscarded -> ImageDetailUiState.Discarded
+          }
+        } catch (e: CancellationException) {
+          throw e
+        } catch (_: Exception) {
+          _events.send(ImageDetailEvent.DeleteFailed)
+          load()
         }
     }
   }
@@ -84,7 +93,7 @@ class ImageDetailViewModel(
     viewModelScope.launch {
       val event =
         try {
-          sharedImages.prepare(current.file)?.let(ImageDetailEvent::Share) ?: ImageDetailEvent.ShareFailed
+          cards.shareImage(sourceImage)?.let(ImageDetailEvent::Share) ?: ImageDetailEvent.ShareFailed
         } catch (e: CancellationException) {
           throw e
         } catch (_: Exception) {

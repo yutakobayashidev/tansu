@@ -6,6 +6,7 @@ import dev.yutakobayashi.tansu.data.analysis.ImageCodec
 import dev.yutakobayashi.tansu.data.analysis.ImageInfo
 import dev.yutakobayashi.tansu.data.analysis.ReadCard
 import dev.yutakobayashi.tansu.data.card.CardRepository
+import dev.yutakobayashi.tansu.data.card.SharedImageFiles
 import dev.yutakobayashi.tansu.data.card.SourceImageFiles
 import dev.yutakobayashi.tansu.data.card.TansuDatabase
 import dev.yutakobayashi.tansu.domain.Candidate
@@ -45,7 +46,12 @@ class CardExporterTest {
     imageDirectory.deleteRecursively()
     exportDirectory.deleteRecursively()
     database = TansuDatabase.build(context, DATABASE)
-    repository = CardRepository(database, SourceImageFiles(imageDirectory), Dispatchers.Unconfined)
+    repository = CardRepository(
+      database,
+      SourceImageFiles(imageDirectory),
+      SharedImageFiles(File(context.cacheDir, "exports/images")),
+      Dispatchers.Unconfined,
+    )
     exporter =
       CardExporter(repository, exportDirectory, ExportPhotoRenderer(FakeCodec), Dispatchers.Unconfined)
   }

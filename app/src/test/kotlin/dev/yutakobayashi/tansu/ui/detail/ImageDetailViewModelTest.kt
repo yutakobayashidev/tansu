@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import dev.yutakobayashi.tansu.data.analysis.pngBytes
 import dev.yutakobayashi.tansu.data.card.CardRepository
+import dev.yutakobayashi.tansu.data.card.SharedImageFiles
 import dev.yutakobayashi.tansu.data.card.SourceImageFiles
 import dev.yutakobayashi.tansu.data.card.TansuDatabase
 import dev.yutakobayashi.tansu.data.folder.FakeDocument
@@ -62,7 +63,12 @@ class ImageDetailViewModelTest {
     imageDirectory.deleteRecursively()
     sharedDirectory.deleteRecursively()
     database = TansuDatabase.build(context, DATABASE)
-    cards = CardRepository(database, SourceImageFiles(imageDirectory), Dispatchers.IO)
+    cards = CardRepository(
+      database,
+      SourceImageFiles(imageDirectory),
+      SharedImageFiles(sharedDirectory),
+      Dispatchers.IO,
+    )
     folders = FolderRepository(store, access, database, cards, Dispatchers.IO)
     access.documents += FakeDocument.of(TREE, NAME, 1, IMAGE)
     runBlocking { folders.select(TREE) }
@@ -156,6 +162,42 @@ class ImageDetailViewModelTest {
     assertArrayEquals(IMAGE, loaded.file.readBytes())
   }
 
+  @Test
+  fun deletingTheLastCardAfterSharingLeavesNoSharedCopy() = runBlocking {
+    // AC26・ADR 0005: 共有用に作った写しも、複製と一緒に消える。
+    val hash = saveFromFolder("山田 太郎")
+    val viewModel = viewModel(hash)
+    val loaded = viewModel.awaitLoaded()
+    viewModel.share()
+    val event = withContext(Dispatchers.Default) { withTimeout(5_000) { viewModel.events.first() } }
+    assertTrue((event as ImageDetailEvent.Share).image.file.exists())
+
+    viewModel.delete(loaded.cards[0].uid)
+    viewModel.await { it == ImageDetailUiState.Discarded }
+
+    assertTrue(sharedDirectory.listFiles().orEmpty().isEmpty())
+    assertFalse(loaded.file.exists())
+    assertOriginalIsKept()
+  }
+
+  @Test
+  fun aFailedDeletionIsReportedAndTheListIsReloaded() = runBlocking {
+    val hash = saveFromFolder("山田 太郎", "佐藤 花子")
+    val viewModel = viewModel(hash)
+    val loaded = viewModel.awaitLoaded()
+    // 別の経路で先に消され、この画面の削除は失敗する。
+    cards.deleteCard(hash, loaded.cards[0].uid)
+
+    viewModel.delete(loaded.cards[0].uid)
+    val event = withContext(Dispatchers.Default) { withTimeout(5_000) { viewModel.events.first() } }
+    val after =
+      viewModel.await { it is ImageDetailUiState.Loaded && !it.isDeleting && it.cards.size == 1 }
+        as ImageDetailUiState.Loaded
+
+    assertEquals(ImageDetailEvent.DeleteFailed, event)
+    assertEquals(listOf("佐藤 花子"), after.cards.map { it.fn.value })
+  }
+
   /** フォルダの画像を取り込み、[names] の候補をすべて確定して保存する。 */
   private suspend fun saveFromFolder(vararg names: String): ContentHash {
     val hash = folders.import(DOCUMENT).sourceImage
@@ -173,7 +215,7 @@ class ImageDetailViewModelTest {
   }
 
   private fun viewModel(hash: ContentHash) =
-    ImageDetailViewModel(hash, cards, SharedImageFiles(sharedDirectory, Dispatchers.IO))
+    ImageDetailViewModel(hash, cards)
 
   private suspend fun ImageDetailViewModel.awaitLoaded(): ImageDetailUiState.Loaded =
     await { it is ImageDetailUiState.Loaded } as ImageDetailUiState.Loaded

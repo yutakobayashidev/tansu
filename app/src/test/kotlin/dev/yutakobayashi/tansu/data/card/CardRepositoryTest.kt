@@ -28,6 +28,7 @@ import org.robolectric.RobolectricTestRunner
 class CardRepositoryTest {
   private val context: Context = ApplicationProvider.getApplicationContext()
   private val imageDirectory = File(context.filesDir, "source-images")
+  private val sharedDirectory = File(context.cacheDir, "exports/images")
   private val openDatabases = mutableListOf<TansuDatabase>()
 
   private lateinit var repository: CardRepository
@@ -36,6 +37,7 @@ class CardRepositoryTest {
   fun setUp() {
     context.deleteDatabase(DATABASE)
     imageDirectory.deleteRecursively()
+    sharedDirectory.deleteRecursively()
     repository = openRepository()
   }
 
@@ -44,6 +46,7 @@ class CardRepositoryTest {
     openDatabases.forEach { it.close() }
     context.deleteDatabase(DATABASE)
     imageDirectory.deleteRecursively()
+    sharedDirectory.deleteRecursively()
   }
 
   @Test
@@ -247,6 +250,32 @@ class CardRepositoryTest {
   }
 
   @Test
+  fun deletingTheLastCardDeletesSharedCopiesOfThatImageOnly() = runTest {
+    // AC26・ADR 0005: 共有用の写しも複製と一緒に消し、ほかの画像の写しは残す。
+    val (hash, saved) = saveCards(IMAGE, "山田 太郎")
+    val (other, _) = saveCards(OTHER_IMAGE, "佐藤 花子")
+    sharedDirectory.mkdirs()
+    val shared = listOf("jpg", "png").map { File(sharedDirectory, "${hash.value}.$it").apply { writeBytes(IMAGE) } }
+    val otherShared = File(sharedDirectory, "${other.value}.jpg").apply { writeBytes(OTHER_IMAGE) }
+
+    repository.deleteCard(hash, saved[0].uid)
+
+    assertTrue(shared.none { it.exists() })
+    assertArrayEquals(OTHER_IMAGE, otherShared.readBytes())
+  }
+
+  @Test
+  fun deletingOneOfSeveralCardsKeepsTheSharedCopy() = runTest {
+    val (hash, saved) = saveCards(IMAGE, "山田 太郎", "佐藤 花子")
+    sharedDirectory.mkdirs()
+    val shared = File(sharedDirectory, "${hash.value}.jpg").apply { writeBytes(IMAGE) }
+
+    repository.deleteCard(hash, saved[0].uid)
+
+    assertArrayEquals(IMAGE, shared.readBytes())
+  }
+
+  @Test
   fun deletingACardOfAnotherImageIsRejected() = runTest {
     val (hash, _) = saveCards(IMAGE, "山田 太郎")
     val (_, other) = saveCards(OTHER_IMAGE, "佐藤 花子")
@@ -292,7 +321,12 @@ class CardRepositoryTest {
   private fun openRepository(): CardRepository {
     val database = TansuDatabase.build(context, DATABASE)
     openDatabases += database
-    return CardRepository(database, SourceImageFiles(imageDirectory), Dispatchers.Unconfined)
+    return CardRepository(
+      database,
+      SourceImageFiles(imageDirectory),
+      SharedImageFiles(sharedDirectory),
+      Dispatchers.Unconfined,
+    )
   }
 
   private fun candidate(hash: ContentHash, fn: String) = Candidate.fromRaw(hash, fn = fn)
