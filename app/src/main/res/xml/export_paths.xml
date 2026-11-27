@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 書き出した vCard / CSV だけを共有シートへ渡す。CardExporter の書き出し先と揃える。 -->
+<paths>
+    <cache-path name="exports" path="exports/" />
+</paths>

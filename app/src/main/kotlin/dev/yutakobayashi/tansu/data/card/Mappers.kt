@@ -9,6 +9,7 @@ import dev.yutakobayashi.tansu.domain.ContentHash
 import dev.yutakobayashi.tansu.domain.CopiedFileRef
 import dev.yutakobayashi.tansu.domain.ImageProgress
 import dev.yutakobayashi.tansu.domain.PropertyValue
+import dev.yutakobayashi.tansu.domain.SavedCard
 import dev.yutakobayashi.tansu.domain.SourceImage
 import dev.yutakobayashi.tansu.domain.Uid
 import java.util.UUID
@@ -58,6 +59,12 @@ internal fun CardEntity.toDomain(): Card = Card.of(
   uid = Uid(UUID.fromString(uid)),
   fn = requireNotNull(PropertyValue.of(fn)) { "Stored card has an empty FN" },
   details = details.toDomain(),
+)
+
+internal fun SavedCardRow.toDomain() = SavedCard(
+  card = card.toDomain(),
+  sourceImage = ContentHash(card.sourceImage),
+  readCandidateCount = candidateCount,
 )
 
 private fun CardDetails.toColumns() = DetailsColumns(

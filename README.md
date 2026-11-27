@@ -87,6 +87,14 @@ Maestro flows:
    android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/folder-grid.yaml
    ```
 
+   The export flow uses the same setup. It saves one card through the debug
+   seed link, exports it as vCard and CSV, and checks that the share sheet
+   opens with `tansu.vcf` / `tansu.csv`:
+
+   ```bash
+   android-dev test -e APP_ID=dev.yutakobayashi.tansu .maestro/export-share.yaml
+   ```
+
 Return `emulator` to `false` before committing unless a change genuinely needs
 an emulator in CI.
 
