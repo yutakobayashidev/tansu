@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,7 +64,7 @@ import kotlinx.coroutines.Dispatchers
 typealias ThumbnailLoader = suspend (image: FolderImage, sizePx: Int) -> ImageBitmap?
 
 @Composable
-fun HomeScreen(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
+fun HomeScreen(onOpenSettings: () -> Unit, onOpenImage: (FolderImage) -> Unit, modifier: Modifier = Modifier) {
   val container = LocalContext.current.appContainer
   val viewModel: HomeViewModel = viewModel {
     HomeViewModel(container.byoSettingsRepository.summary, container.folderRepository)
@@ -85,8 +86,7 @@ fun HomeScreen(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
     isSettingsComplete = isSettingsComplete,
     folder = folder,
     onOpenSettings = onOpenSettings,
-    // 解析の起動は後続の Issue で実装する。ここでは設定未完了時に押せないことだけを担う。
-    onAnalyze = {},
+    onOpenImage = onOpenImage,
     onPickFolder = { pickFolder.launch(selectedFolder?.toUri()) },
     loadThumbnail = thumbnails::load,
     exportAction = { ExportAction() },
@@ -99,8 +99,8 @@ fun HomeScreen(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
 internal fun HomeScreen(
   isSettingsComplete: Boolean,
   onOpenSettings: () -> Unit,
-  onAnalyze: () -> Unit,
   modifier: Modifier = Modifier,
+  onOpenImage: (FolderImage) -> Unit = {},
   folder: FolderUiState = FolderUiState.NotSelected,
   onPickFolder: () -> Unit = {},
   loadThumbnail: ThumbnailLoader = { _, _ -> null },
@@ -127,16 +127,10 @@ internal fun HomeScreen(
       if (!isSettingsComplete) {
         SettingsRequiredNotice(onOpenSettings = onOpenSettings)
       }
-      Button(
-        onClick = onAnalyze,
-        enabled = isSettingsComplete,
-        modifier = Modifier.fillMaxWidth().testTag(HomeTestTags.ANALYZE_BUTTON),
-      ) {
-        Text(stringResource(R.string.home_analyze))
-      }
       FolderSection(
         folder = folder,
         onPickFolder = onPickFolder,
+        onOpenImage = onOpenImage,
         loadThumbnail = loadThumbnail,
         modifier = Modifier.weight(1f),
       )
@@ -163,6 +157,7 @@ fun SettingsRequiredNotice(onOpenSettings: () -> Unit, modifier: Modifier = Modi
 private fun FolderSection(
   folder: FolderUiState,
   onPickFolder: () -> Unit,
+  onOpenImage: (FolderImage) -> Unit,
   loadThumbnail: ThumbnailLoader,
   modifier: Modifier = Modifier,
 ) {
@@ -204,7 +199,7 @@ private fun FolderSection(
         if (folder.images.isEmpty()) {
           Text(stringResource(R.string.folder_empty), style = MaterialTheme.typography.bodyMedium)
         } else {
-          FolderImageGrid(folder.images, loadThumbnail)
+          FolderImageGrid(folder.images, onOpenImage, loadThumbnail)
         }
       }
   }
@@ -234,19 +229,23 @@ private fun FolderNotice(
 }
 
 @Composable
-private fun FolderImageGrid(images: List<FolderImage>, loadThumbnail: ThumbnailLoader) {
+private fun FolderImageGrid(
+  images: List<FolderImage>,
+  onOpenImage: (FolderImage) -> Unit,
+  loadThumbnail: ThumbnailLoader,
+) {
   LazyVerticalGrid(
     columns = GridCells.Adaptive(minSize = 104.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalArrangement = Arrangement.spacedBy(8.dp),
     modifier = Modifier.fillMaxSize().testTag(HomeTestTags.FOLDER_GRID),
   ) {
-    items(images, key = { it.uri }) { image -> FolderImageTile(image, loadThumbnail) }
+    items(images, key = { it.uri }) { image -> FolderImageTile(image, { onOpenImage(image) }, loadThumbnail) }
   }
 }
 
 @Composable
-private fun FolderImageTile(image: FolderImage, loadThumbnail: ThumbnailLoader) {
+private fun FolderImageTile(image: FolderImage, onClick: () -> Unit, loadThumbnail: ThumbnailLoader) {
   val sizePx = with(LocalDensity.current) { THUMBNAIL_SIZE.roundToPx() }
   val thumbnail by
     produceState<ImageBitmap?>(null, image.uri, image.lastModified, image.size) {
@@ -255,7 +254,11 @@ private fun FolderImageTile(image: FolderImage, loadThumbnail: ThumbnailLoader) 
   val badge = image.progress?.let { progressLabel(it) }
   val description = listOfNotNull(image.displayName, badge).joinToString("、")
   Column(
-    modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = description },
+    // 画像を開くとレビュー画面へ進む。解析は開いた先で利用者が明示的に始める（AC2）。
+    modifier =
+      Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick).semantics(mergeDescendants = true) {
+        contentDescription = description
+      },
     verticalArrangement = Arrangement.spacedBy(4.dp),
   ) {
     Box(
@@ -315,7 +318,6 @@ private fun progressLabel(progress: ImageProgress): String =
 private val THUMBNAIL_SIZE = 160.dp
 
 object HomeTestTags {
-  const val ANALYZE_BUTTON = "home_analyze_button"
   const val SETTINGS_ACTION = "home_settings_action"
   const val SETTINGS_REQUIRED_NOTICE = "home_settings_required_notice"
   const val FOLDER_NOT_SELECTED = "home_folder_not_selected"
@@ -339,13 +341,13 @@ private val PREVIEW_IMAGES =
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenIncompletePreview() {
-  TansuTheme { HomeScreen(isSettingsComplete = false, onOpenSettings = {}, onAnalyze = {}) }
+  TansuTheme { HomeScreen(isSettingsComplete = false, onOpenSettings = {}) }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenCompletePreview() {
-  TansuTheme { HomeScreen(isSettingsComplete = true, onOpenSettings = {}, onAnalyze = {}) }
+  TansuTheme { HomeScreen(isSettingsComplete = true, onOpenSettings = {}) }
 }
 
 @Preview(showBackground = true)
@@ -355,7 +357,6 @@ private fun HomeScreenFolderPreview() {
     HomeScreen(
       isSettingsComplete = true,
       onOpenSettings = {},
-      onAnalyze = {},
       folder = FolderUiState.Loaded("名刺", PREVIEW_IMAGES),
     )
   }
@@ -365,6 +366,6 @@ private fun HomeScreenFolderPreview() {
 @Composable
 private fun HomeScreenFolderUnavailablePreview() {
   TansuTheme {
-    HomeScreen(isSettingsComplete = true, onOpenSettings = {}, onAnalyze = {}, folder = FolderUiState.Unavailable)
+    HomeScreen(isSettingsComplete = true, onOpenSettings = {}, folder = FolderUiState.Unavailable)
   }
 }

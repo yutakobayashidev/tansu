@@ -2,6 +2,7 @@ package dev.yutakobayashi.tansu.data.folder
 
 import dev.yutakobayashi.tansu.data.card.CardRepository
 import dev.yutakobayashi.tansu.data.card.TansuDatabase
+import dev.yutakobayashi.tansu.domain.Analysis
 import dev.yutakobayashi.tansu.domain.ContentHash
 import dev.yutakobayashi.tansu.domain.FolderImage
 import java.io.IOException
@@ -84,6 +85,21 @@ class FolderRepository(
     val progress = cards.progress(hashByUri.values.toSet())
     images.map { image -> image.copy(progress = hashByUri[image.uri]?.let(progress::getValue)) }
   }
+
+  /**
+   * フォルダの画像 1 枚の内容ハッシュを、画像を読んで求める。読めなければ `null`。
+   *
+   * 取り込み前の画像が、既に取り込んだ名刺画像と同じ内容かを確かめるために使う。
+   */
+  suspend fun contentHash(documentUri: String): ContentHash? = withContext(ioDispatcher) { readHash(documentUri) }
+
+  /**
+   * フォルダの画像 1 枚を取り込み、その解析を返す（[CardRepository.import]）。
+   *
+   * 読めなければ [IOException] か [SecurityException] を投げる。
+   */
+  suspend fun import(documentUri: String): Analysis =
+    withContext(ioDispatcher) { access.open(documentUri) }.let { input -> cards.import(input) }
 
   /** 覚えているハッシュを使い、無いか古い画像だけを読んでハッシュを求める。 */
   private suspend fun contentHashes(images: List<FolderImage>): Map<String, ContentHash> {
