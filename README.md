@@ -110,6 +110,31 @@ Maestro flows:
      .maestro/image-detail-original-removed.yaml
    ```
 
+   The import flow (AC14, AC19) runs the whole path in one flow: API key
+   settings, folder selection, analysis, save, and vCard sharing. It uses the
+   same setup, analyzes `card-c.jpg`, and saves three screenshots to the
+   `takeScreenshot/` directory under `--test-output-dir`. After opening the
+   image, analysis and save take two taps.
+
+   On a physical device, pass a real OpenAI-compatible endpoint. The flow
+   saves the settings, checks the connection, and sends the image over HTTP.
+   The folder picker steps expect DocumentsUI in English:
+
+   ```bash
+   .maestro/setup-folder-grid.sh SERIAL
+   ANDROID_DEV_DEVICE=SERIAL android-dev test --test-output-dir captures/import-e2e \
+     -e APP_ID=dev.yutakobayashi.tansu \
+     -e BASE_URL=https://api.openai.com/v1 -e MODEL=MODEL_ID -e API_KEY="$OPENAI_API_KEY" \
+     .maestro/import-e2e.yaml
+   adb -s SERIAL shell wm size reset && adb -s SERIAL shell wm density reset
+   ```
+
+   Without an API key, add `-e FAKE_ANALYSIS=true` to replace the analysis
+   client with the debug fake (three candidates). Omit `BASE_URL` to skip the
+   settings steps as well. To exercise the settings screen without a key,
+   point `BASE_URL` at an endpoint that answers `GET /models` with 2xx, such as
+   `https://httpbin.org/anything` with a dummy key.
+
 Return `emulator` to `false` before committing unless a change genuinely needs
 an emulator in CI.
 

@@ -1,0 +1,94 @@
+# yamllint disable rule:document-start
+# AC14 / AC19: API キー設定 → フォルダ選択 → 解析 → 保存 → 共有を 1 本で通す。
+#
+# .maestro/setup-folder-grid.sh を実行してから流す。解析には card-c.jpg を使う。
+# 実機では、OpenAI 互換 API の接続先を -e で渡す。解析は実際に HTTP で送る。
+#   ANDROID_DEV_DEVICE=SERIAL android-dev test --test-output-dir captures/import-e2e \
+#     -e APP_ID=dev.yutakobayashi.tansu \
+#     -e BASE_URL=https://api.openai.com/v1 -e MODEL=MODEL_ID -e API_KEY="$OPENAI_API_KEY" \
+#     .maestro/import-e2e.yaml
+# BASE_URL を渡したときだけ、設定画面で 3 項目を入力して接続を確認する。
+# -e FAKE_ANALYSIS=true を付けると、解析を debug ビルド専用の偽のクライアント（3 人の候補）に
+# 差し替え、解析の HTTP を送らずに残りを同じ手順で流す。
+#
+# 撮影する 3 枚（AC14）: 接続確認の成功、解析後のレビュー画面、vCard の共有シート。
+# フォルダ選択は DocumentsUI（英語ロケール）を操作する。
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+
+# 1. API キー設定。保存してから接続を確認する。
+- runFlow:
+    when:
+      true: ${typeof BASE_URL !== 'undefined'}
+    commands:
+      - tapOn: 設定
+      - tapOn: base URL
+      - inputText: ${BASE_URL}
+      - hideKeyboard
+      - tapOn: モデル名
+      - inputText: ${MODEL}
+      - hideKeyboard
+      - tapOn: API キー
+      - inputText: ${API_KEY}
+      - hideKeyboard
+      - tapOn: 保存
+      - extendedWaitUntil:
+          visible: 保存しました
+          timeout: 10000
+      - tapOn: 接続を確認
+      - extendedWaitUntil:
+          visible: 接続できました
+          timeout: 20000
+      # 結果は画面の下端に出て、撮影範囲から外れることがある。撮影前に 1 回送る。
+      - scroll
+      - takeScreenshot: 01-settings-connected
+      - tapOn: 戻る
+
+# 2. フォルダ選択
+- tapOn: フォルダを選ぶ
+- tapOn: Pictures
+- tapOn: tansu-e2e
+- tapOn: USE THIS FOLDER
+- tapOn: ALLOW
+- extendedWaitUntil:
+    visible: "card-c.jpg、未処理"
+    timeout: 10000
+
+# 偽の解析クライアントはプロセスが続くあいだだけ有効なので、この後に launchApp を使わない。
+- runFlow:
+    when:
+      true: ${typeof FAKE_ANALYSIS !== 'undefined' && FAKE_ANALYSIS == 'true'}
+    commands:
+      - openLink: tansu-debug://fake-analysis?fixture=three-people
+      - extendedWaitUntil:
+          visible: "card-c.jpg、未処理"
+          timeout: 10000
+
+# 3. 解析。画像を開いてから「解析 → 保存」の 2 タップで終わる（AC19）。
+- tapOn: "card-c.jpg、未処理"
+- extendedWaitUntil:
+    visible: 解析
+    timeout: 10000
+# 1 タップ目: 解析。実際の API では応答に時間がかかる。
+- tapOn: 解析
+- extendedWaitUntil:
+    visible: "候補 1 / \\d+"
+    timeout: 120000
+- takeScreenshot: 02-review
+
+# 4. 保存。2 タップ目で、読み取った候補をすべて保存する。
+- tapOn: "保存（\\d+ 件）"
+- extendedWaitUntil:
+    visible: "card-c.jpg、完了"
+    timeout: 10000
+
+# 5. 共有。保存した名刺を vCard に書き出し、共有シートで渡す。
+- tapOn: 書き出し
+- tapOn: vCard（.vcf）
+- extendedWaitUntil:
+    visible: "tansu.vcf"
+    timeout: 10000
+- takeScreenshot: 03-share-sheet
+- back
